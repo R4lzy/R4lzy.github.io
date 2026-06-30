@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>R4lzy</title>
 <meta name="description" content="i like making things, breaking things, and learning how they work.">
+
+<!-- Favicon (Tab Logo) -->
+<link rel="icon" type="image/png" href="assets/images/favicon.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Special+Elite&display=swap" rel="stylesheet">
@@ -48,7 +52,7 @@
     left: -5%;
     width: 110%;
     height: 110%;
-    background-image: url('https://picsum.photos/seed/r4lzy-vintage-bg/1200/800'); /* Replace with your own background image */
+    background-image: url('assets/images/background.jpg'); /* Custom background image */
     background-size: cover;
     background-position: center;
     filter: blur(12px) brightness(0.4) grayscale(0.3);
@@ -240,13 +244,17 @@
   .prose p:last-child { margin-bottom: 0; }
 
   .project-list { display: flex; flex-direction: column; gap: 60px; }
+  
   .project-item {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 32px;
     cursor: none;
+    text-decoration: none; /* Prevents link underline */
+    color: inherit; /* Keeps text the same color */
   }
+  
   .project-img {
     flex: 1;
     aspect-ratio: 16 / 10;
@@ -286,6 +294,21 @@
   }
   .project-item:hover .project-desc { opacity: 1; transform: translateX(0); }
 
+  .project-link-indicator {
+    display: inline-block;
+    margin-top: 10px;
+    font-family: 'Special Elite', monospace;
+    font-size: 12px;
+    color: var(--text);
+    opacity: 0;
+    transform: translateX(-12px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .project-item:hover .project-link-indicator {
+    opacity: 0.8;
+    transform: translateX(0);
+  }
+
   /* ---- Gallery ---- */
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .grid-item {
@@ -308,7 +331,7 @@
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0,0,0,0.6);
     backdrop-filter: blur(8px);
     z-index: 100;
     display: flex;
@@ -448,7 +471,6 @@
   .mp-btn.play-main svg { width: 12px; height: 12px; fill: var(--text); }
   .mp-btn.play-main:hover { border-color: var(--text); background: rgba(255,255,255,0.05); }
 
-  /* Volume slider hidden on mobile to save space, replaced by simple controls */
   .vol-slider {
     -webkit-appearance: none;
     appearance: none;
@@ -493,6 +515,7 @@
     .project-item { flex-direction: column; align-items: flex-start; gap: 20px; }
     .project-info { width: 100%; }
     .project-desc { opacity: 1; transform: none; }
+    .project-link-indicator { opacity: 0.8; transform: none; }
     
     .grid { grid-template-columns: 1fr; }
     
@@ -567,46 +590,59 @@
   <section id="projects" class="fade">
     <p class="label">projects</p>
     <div class="project-list">
-      <div class="project-item">
-        <div class="project-img"><img src="https://picsum.photos/seed/r4lzy-p1/600/375" alt="Lua Project" loading="lazy"></div>
+      
+      <!-- Project 1 -->
+      <a class="project-item" href="https://github.com/yourusername/your-lua-repo" target="_blank" rel="noopener noreferrer">
+        <div class="project-img"><img src="assets/images/projects/project1.jpg" alt="Lua Project" loading="lazy"></div>
         <div class="project-info">
           <h3>lua scripts</h3>
           <p class="project-desc">various game scripting experiments and automation tools built for learning environments.</p>
+          <span class="project-link-indicator">view project ↗</span>
         </div>
-      </div>
-      <div class="project-item">
-        <div class="project-img"><img src="https://picsum.photos/seed/r4lzy-p2/600/375" alt="Web Project" loading="lazy"></div>
+      </a>
+
+      <!-- Project 2 -->
+      <a class="project-item" href="https://github.com/yourusername/your-web-repo" target="_blank" rel="noopener noreferrer">
+        <div class="project-img"><img src="assets/images/projects/project2.jpg" alt="Web Project" loading="lazy"></div>
         <div class="project-info">
           <h3>web interfaces</h3>
           <p class="project-desc">minimal, static pages and small interactive web apps written in plain html and css.</p>
+          <span class="project-link-indicator">view project ↗</span>
         </div>
-      </div>
-      <div class="project-item">
-        <div class="project-img"><img src="https://picsum.photos/seed/r4lzy-p3/600/375" alt="C# Project" loading="lazy"></div>
+      </a>
+
+      <!-- Project 3 -->
+      <a class="project-item" href="https://github.com/yourusername/your-csharp-repo" target="_blank" rel="noopener noreferrer">
+        <div class="project-img"><img src="assets/images/projects/project3.jpg" alt="C# Project" loading="lazy"></div>
         <div class="project-info">
           <h3>c# utilities</h3>
           <p class="project-desc">desktop tools and background utilities designed to solve specific, annoying problems.</p>
+          <span class="project-link-indicator">view project ↗</span>
         </div>
-      </div>
-      <div class="project-item">
-        <div class="project-img"><img src="https://picsum.photos/seed/r4lzy-p4/600/375" alt="LARP Project" loading="lazy"></div>
+      </a>
+
+      <!-- Project 4 -->
+      <a class="project-item" href="https://github.com/yourusername/your-larp-repo" target="_blank" rel="noopener noreferrer">
+        <div class="project-img"><img src="assets/images/projects/project4.jpg" alt="LARP Project" loading="lazy"></div>
         <div class="project-info">
           <h3>larp resources</h3>
           <p class="project-desc">character sheet generators and quick reference tools for tabletop and live-action roleplay.</p>
+          <span class="project-link-indicator">view project ↗</span>
         </div>
-      </div>
+      </a>
+
     </div>
   </section>
 
   <section id="gallery" class="fade">
     <p class="label">gallery</p>
     <div class="grid">
-      <div class="grid-item"><img src="https://picsum.photos/seed/r4lzy-v1/500/375" alt="" loading="lazy"></div>
-      <div class="grid-item"><img src="https://picsum.photos/seed/r4lzy-v2/500/375" alt="" loading="lazy"></div>
-      <div class="grid-item"><img src="https://picsum.photos/seed/r4lzy-v3/500/375" alt="" loading="lazy"></div>
-      <div class="grid-item"><img src="https://picsum.photos/seed/r4lzy-v4/500/375" alt="" loading="lazy"></div>
-      <div class="grid-item"><img src="https://picsum.photos/seed/r4lzy-v5/500/375" alt="" loading="lazy"></div>
-      <div class="grid-item"><img src="https://picsum.photos/seed/r4lzy-v6/500/375" alt="" loading="lazy"></div>
+      <div class="grid-item"><img src="assets/images/gallery/gallery1.jpg" alt="" loading="lazy"></div>
+      <div class="grid-item"><img src="assets/images/gallery/gallery2.jpg" alt="" loading="lazy"></div>
+      <div class="grid-item"><img src="assets/images/gallery/gallery3.jpg" alt="" loading="lazy"></div>
+      <div class="grid-item"><img src="assets/images/gallery/gallery4.jpg" alt="" loading="lazy"></div>
+      <div class="grid-item"><img src="assets/images/gallery/gallery5.jpg" alt="" loading="lazy"></div>
+      <div class="grid-item"><img src="assets/images/gallery/gallery6.jpg" alt="" loading="lazy"></div>
     </div>
   </section>
 </main>
@@ -617,11 +653,11 @@
     <button class="modal-close" id="modalClose">&times;</button>
     <h2>contact</h2>
     <a href="https://discord.com/users/@ralzye" target="_blank" class="discord-link">
-      <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.010c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
       <span>@ralzye</span>
     </a>
     <a href="https://discord.com/users/@ralzydelunaa" target="_blank" class="discord-link">
-      <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.010c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.010c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
       <span>@ralzydelunaa</span>
     </a>
   </div>
@@ -630,7 +666,7 @@
 <!-- Compact Music Player -->
 <div class="music-player" id="musicPlayer">
   <div class="mp-cover">
-    <img id="coverImg" src="https://picsum.photos/seed/r4lzy-cover1/48/48" alt="Album Cover">
+    <img id="coverImg" src="assets/images/covers/cover1.jpg" alt="Album Cover">
   </div>
   <div class="mp-info">
     <div class="track-title" id="trackTitle">Track Name</div>
@@ -693,41 +729,36 @@
   // ==========================================
   // COMPACT MUSIC PLAYER (Custom Songs)
   // ==========================================
-  // INSTRUCTIONS: 
-  // 1. Put your MP3 files in an 'assets/music/' folder.
-  // 2. Put your album art in an 'assets/images/' folder.
-  // 3. Update the paths below to match your files.
-  
   const tracks = [
     {
       name: "Neon Lights",
       artist: "Synthwave Artist",
       src: "assets/music/song1.mp3", 
-      cover: "https://picsum.photos/seed/r4lzy-cover1/48/48" // Replace with 'assets/images/cover1.jpg'
+      cover: "assets/images/covers/cover1.jpg" 
     },
     {
       name: "Midnight Drive",
       artist: "Lo-fi Producer",
       src: "assets/music/song2.mp3",
-      cover: "https://picsum.photos/seed/r4lzy-cover2/48/48"
+      cover: "assets/images/covers/cover2.jpg"
     },
     {
       name: "Static Dreams",
       artist: "Ambient Composer",
       src: "assets/music/song3.mp3",
-      cover: "https://picsum.photos/seed/r4lzy-cover3/48/48"
+      cover: "assets/images/covers/cover3.jpg"
     },
     {
       name: "Glitch City",
       artist: "Cyberpunk Band",
       src: "assets/music/song4.mp3",
-      cover: "https://picsum.photos/seed/r4lzy-cover4/48/48"
+      cover: "assets/images/covers/cover4.jpg"
     },
     {
       name: "Void Walker",
       artist: "Dark Synth",
       src: "assets/music/song5.mp3",
-      cover: "https://picsum.photos/seed/r4lzy-cover5/48/48"
+      cover: "assets/images/covers/cover5.jpg"
     }
   ];
 
@@ -790,7 +821,6 @@
       updateUI();
       safeStorage.set('r4lzy_playing', 'true');
     }).catch(() => {
-      // Autoplay might still be blocked if user hasn't interacted
       isPlaying = false;
       updateUI();
     });
@@ -813,7 +843,6 @@
     }
   }
 
-  // Event Listeners
   playBtn.addEventListener('click', () => { isPlaying ? pauseAudio() : playAudio(); });
   
   volSlider.addEventListener('input', (e) => {
@@ -834,11 +863,9 @@
     changeTrack(newIndex);
   });
 
-  // Initialize Player
   loadTrack(currentTrack);
   updateUI();
 
-  // Splash Screen Click to Enter
   splash.addEventListener('click', () => {
     splash.classList.add('hidden');
     if (!isPausedPreference) {
@@ -870,7 +897,6 @@
   }
   animateCursor();
 
-  // Cursor hover effect
   document.querySelectorAll('a, button, .lang, .project-item, .grid-item, .vol-slider').forEach(el => {
     el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
     el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
