@@ -169,6 +169,7 @@
     background: rgba(17, 17, 17, 0.6);
     backdrop-filter: blur(4px);
     border-bottom: 1px solid var(--border);
+    transition: opacity 0.5s ease, transform 0.5s ease;
   }
 
   .brand {
@@ -181,7 +182,7 @@
   }
   .brand:hover { color: var(--muted); }
 
-  .nav-links { display: flex; gap: 32px; }
+  .nav-links { display: flex; gap: 32px; align-items: center; }
 
   .nav-links a, .nav-links button {
     font-family: 'Special Elite', monospace;
@@ -203,7 +204,7 @@
     margin: 0 0 0 48px; 
     padding: 120px 48px 140px 0; 
     text-align: left;
-    transition: filter 0.2s ease; 
+    transition: filter 0.2s ease, opacity 0.5s ease; 
   }
 
   section { padding: 80px 0; }
@@ -436,6 +437,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    transition: opacity 0.5s ease, transform 0.5s ease;
   }
 
   .mp-cover {
@@ -524,6 +526,49 @@
   .fade { opacity: 0; transform: translateY(12px); transition: opacity 0.8s ease, transform 0.8s ease; }
   .fade.visible { opacity: 1; transform: translateY(0); }
 
+  /* ==========================================
+     CINEMATIC MODE STYLES
+     ========================================== */
+  .cinematic-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 60; /* Sits above nav and main, below modal */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+  }
+
+  .cinematic-overlay h1 {
+    font-family: 'Special Elite', monospace;
+    font-size: 4rem; /* Made smaller */
+    color: var(--text);
+    text-shadow: 0 0 30px rgba(0,0,0,0.9);
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+
+  /* When body has cinematic-mode class */
+  body.cinematic-mode nav,
+  body.cinematic-mode main,
+  body.cinematic-mode .music-player {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-20px);
+  }
+  body.cinematic-mode .music-player {
+    transform: translateY(20px);
+  }
+
+  body.cinematic-mode .cinematic-overlay {
+    opacity: 1;
+    pointer-events: auto;
+    cursor: none; /* Keep custom cursor */
+  }
+
   /* ---- Mobile ---- */
   @media (max-width: 768px) {
     body { cursor: auto; }
@@ -551,6 +596,8 @@
       padding: 10px;
     }
     .vol-slider { display: none; }
+    
+    .cinematic-overlay h1 { font-size: 2.5rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -581,6 +628,11 @@
   <div class="splash-text">click to continue</div>
 </div>
 
+<!-- Cinematic Mode Overlay -->
+<div class="cinematic-overlay" id="cinematicOverlay">
+  <h1>R4lzy</h1>
+</div>
+
 <!-- Nav -->
 <nav>
   <a href="#home" class="brand" id="logo">R4lzy</a>
@@ -589,6 +641,7 @@
     <a href="#projects">projects</a>
     <a href="#gallery">gallery</a>
     <button id="contactBtn">contact</button>
+    <button id="cinematicBtn">cinematic</button>
   </div>
 </nav>
 
@@ -812,15 +865,35 @@ Specialized in designing and refining UI/UX for Roblox executor projects, with a
     if (e.target === modal) modal.classList.remove('open');
   });
 
+  // ---- CINEMATIC MODE LOGIC ----
+  const cinematicBtn = document.getElementById('cinematicBtn');
+  const cinematicOverlay = document.getElementById('cinematicOverlay');
+
+  cinematicBtn.addEventListener('click', () => {
+    document.body.classList.add('cinematic-mode');
+  });
+
+  // Click on overlay to exit
+  cinematicOverlay.addEventListener('click', () => {
+    document.body.classList.remove('cinematic-mode');
+  });
+
+  // Press ESC to exit
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.body.classList.remove('cinematic-mode');
+    }
+  });
+
   // ==========================================
   // COMPACT MUSIC PLAYER (Custom Songs)
   // ==========================================
   const tracks = [
-    { name: "Neon Lights", artist: "Synthwave Artist", src: "assets/music/song1.mp3", cover: "assets/images/covers/cover1.jpg" },
-    { name: "Midnight Drive", artist: "Lo-fi Producer", src: "assets/music/song2.mp3", cover: "assets/images/covers/cover2.jpg" },
-    { name: "Static Dreams", artist: "Ambient Composer", src: "assets/music/song3.mp3", cover: "assets/images/covers/cover3.jpg" },
-    { name: "Glitch City", artist: "Cyberpunk Band", src: "assets/music/song4.mp3", cover: "assets/images/covers/cover4.jpg" },
-    { name: "Void Walker", artist: "Dark Synth", src: "assets/music/song5.mp3", cover: "assets/images/covers/cover5.jpg" }
+    { name: "Entry five", artist: "Jaydes", src: "assets/music/song1.mp3", cover: "assets/images/covers/cover1.jpg" },
+    { name: "Goodlooking boy", artist: "suki waterhouse", src: "assets/music/song2.mp3", cover: "assets/images/covers/cover2.jpg" },
+    { name: "sometimes", artist: "idk the artist gng", src: "assets/music/song3.mp3", cover: "assets/images/covers/cover3.jpg" },
+    { name: "as the world caves in", artist: "matt maltese", src: "assets/music/song4.mp3", cover: "assets/images/covers/cover4.jpg" },
+    { name: "Bangkit usai pesta", artist: "the goat minor banger \"Harum Manis\"", src: "assets/music/song5.mp3", cover: "assets/images/covers/cover5.jpg" }
   ];
 
   const audioPlayer = document.getElementById('audioPlayer');
@@ -957,7 +1030,7 @@ Specialized in designing and refining UI/UX for Roblox executor projects, with a
   }
   animateCursor();
 
-  document.querySelectorAll('a, button, .lang, .project-item, .grid-item, .vol-slider').forEach(el => {
+  document.querySelectorAll('a, button, .lang, .project-item, .grid-item, .vol-slider, .cinematic-overlay').forEach(el => {
     el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
     el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
   });
