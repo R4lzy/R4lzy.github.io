@@ -31,6 +31,9 @@ img{display:block;max-width:100%}
 #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--text);z-index:200}
 #loader{position:fixed;inset:0;background:#0b0b0b;z-index:1000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;transition:opacity .5s ease,visibility .5s}
 #loader.done{opacity:0;visibility:hidden}
+/* hard fallback: never trap users on the loader even if all JS fails */
+#loader{animation:forceHide .6s ease 6s forwards}
+@keyframes forceHide{to{opacity:0;visibility:hidden}}
 #loader .l-brand{font-family:var(--font-mono);font-size:1.4rem;letter-spacing:.04em}
 #loader .l-bar{width:180px;height:2px;background:#262626;overflow:hidden;border-radius:2px}
 #loader .l-bar i{display:block;height:100%;width:0;background:var(--text);transition:width .2s}
@@ -402,12 +405,11 @@ footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted
 <audio id="audioPlayer" loop></audio>
 
 <script>
-// ---------- loader ----------
-const lFill=document.getElementById('lFill'),loader=document.getElementById('loader');
-let lp=0;const li=setInterval(()=>{lp=Math.min(lp+Math.random()*28,92);lFill.style.width=lp+'%';},160);
-window.addEventListener('load',()=>{clearInterval(li);lFill.style.width='100%';setTimeout(()=>loader.classList.add('done'),350);});
-setTimeout(()=>loader.classList.add('done'),3500);
-loader.addEventListener('click',()=>loader.classList.add('done'));
+// ---------- loader (isolated: runs even if the main script below fails) ----------
+(function(){var f=document.getElementById('lFill'),l=document.getElementById('loader');if(!l)return;var p=0;var iv=setInterval(function(){p=Math.min(p+Math.random()*28,92);if(f)f.style.width=p+'%';},160);function done(){clearInterval(iv);if(f)f.style.width='100%';l.classList.add('done')}window.addEventListener('load',function(){setTimeout(done,350)});setTimeout(done,3500);l.addEventListener('click',done);})();
+</script>
+
+<script>
 
 // ---------- progress ----------
 const prog=document.getElementById('progress');
@@ -416,7 +418,7 @@ addEventListener('scroll',()=>{const h=document.documentElement;prog.style.width
 // ---------- split text (SplitText style) ----------
 const ht=document.getElementById('heroTitle');
 (()=>{const t=ht.textContent;ht.textContent='';t.split(' ').forEach((word,wi)=>{const w=document.createElement('span');w.className='w';[...word].forEach(c=>{const s=document.createElement('span');s.className='ch';s.textContent=c;w.appendChild(s)});ht.appendChild(w);ht.appendChild(document.createTextNode(' '))});
-requestAnimationFrame(()=>requestAnimationFrame(()=>ht.classList.add('in'));
+requestAnimationFrame(()=>requestAnimationFrame(()=>ht.classList.add('in')));
 [...ht.querySelectorAll('.ch')].forEach((c,i)=>c.style.transitionDelay=(i*22)+'ms');})();
 
 // ---------- decrypt eyebrow (DecryptedText style) ----------
