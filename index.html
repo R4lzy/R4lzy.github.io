@@ -3,1064 +3,495 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>R4lzy</title>
-<meta name="description" content="i like making things, breaking things, and learning how they work.">
-
-<!-- Favicon (Tab Logo) -->
+<title>R4lzy — Reverse Engineering & Web</title>
+<meta name="description" content="R4lzy — reverse engineering, desktop tools and product websites. I build, break and document how things work.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23111111'/><text x='50' y='78' font-size='80' font-family='Georgia, serif' font-weight='bold' fill='%23d4d4d4' text-anchor='middle'>R</text></svg>">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Special+Elite&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Special+Elite&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0e0e0e; --bg2:#141414; --card:#161616;
+  --text:#e8e8e8; --muted:#9a9a9a; --dim:#4a4a4a;
+  --border:rgba(255,255,255,.09); --border2:rgba(255,255,255,.14);
+  --accent:#e8e8e8;
+  --radius:14px;
+  --font-body:'EB Garamond',serif; --font-mono:'Special Elite',monospace; --font-ui:'Inter',system-ui,sans-serif;
+  --spot-x:50%; --spot-y:50%;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.75;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:#e8e8e8;color:#111}
+a{color:inherit}
+img{display:block;max-width:100%}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px}
 
-  :root {
-    --bg: #111111;
-    --text: #d4d4d4;
-    --muted: #7a7a7a;
-    --dim: #3a3a3a;
-    --border: rgba(255, 255, 255, 0.08);
-  }
+/* ---------- progress + preloader ---------- */
+#progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--text);z-index:200}
+#loader{position:fixed;inset:0;background:#0b0b0b;z-index:1000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;transition:opacity .5s ease,visibility .5s}
+#loader.done{opacity:0;visibility:hidden}
+#loader .l-brand{font-family:var(--font-mono);font-size:1.4rem;letter-spacing:.04em}
+#loader .l-bar{width:180px;height:2px;background:#262626;overflow:hidden;border-radius:2px}
+#loader .l-bar i{display:block;height:100%;width:0;background:var(--text);transition:width .2s}
+#loader .l-sub{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
 
-  html {
-    scroll-behavior: smooth;
-  }
+/* ---------- bg layers ---------- */
+#bgVideo{position:fixed;top:50%;left:50%;min-width:100vw;min-height:100vh;z-index:-4;transform:translate(-50%,-50%);filter:blur(6px) brightness(.28) grayscale(.35);object-fit:cover;pointer-events:none}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(1000px 500px at 50% 0%,rgba(255,255,255,.05),transparent 60%),#0b0b0b;z-index:-5}
+#dust{position:fixed;inset:0;z-index:-3;pointer-events:none;opacity:.7}
+#veil{position:fixed;inset:0;background:radial-gradient(1200px 600px at 20% 0%,rgba(255,255,255,.05),transparent 60%),rgba(10,10,10,.62);z-index:-2;pointer-events:none}
 
-  body {
-    background-color: var(--bg);
-    color: var(--text);
-    font-family: 'EB Garamond', serif;
-    font-size: 17px;
-    line-height: 1.8;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    position: relative;
-    overflow-x: hidden;
-    cursor: none;
-  }
+/* ---------- cursor (trailing ring, native cursor kept) ---------- */
+.cursor-dot,.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:9999;border-radius:50%}
+.cursor-dot{width:6px;height:6px;background:var(--text);transform:translate(-50%,-50%);mix-blend-mode:difference}
+.cursor-ring{width:30px;height:30px;border:1px solid rgba(255,255,255,.35);transform:translate(-50%,-50%);transition:width .25s,height .25s,border-color .25s}
+.cursor-ring.hover{width:52px;height:52px;border-color:rgba(255,255,255,.8)}
+@media(hover:none),(pointer:coarse){.cursor-dot,.cursor-ring{display:none}}
 
-  /* ---- Custom Live Video Background ---- */
-  #bgVideo {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    min-width: 100vw;
-    min-height: 100vh;
-    width: auto;
-    height: auto;
-    z-index: -3;
-    transform: translate(-50%, -50%);
-    filter: blur(4px) brightness(0.35) grayscale(0.3); /* Blur and darken video for text readability */
-    pointer-events: none;
-    object-fit: cover;
-  }
+/* ---------- nav ---------- */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:16px 28px;background:rgba(14,14,14,.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.brand{font-family:var(--font-mono);font-size:15px;text-decoration:none;letter-spacing:.03em}
+.nav-links{display:flex;gap:26px;align-items:center}
+.nav-links a,.nav-links button{font-family:var(--font-ui);font-size:12.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-decoration:none;background:none;border:none;cursor:pointer;position:relative;padding:4px 0;transition:color .25s}
+.nav-links a:hover,.nav-links button:hover{color:var(--text)}
+.nav-links a.active{color:var(--text)}
+.nav-links a.active::after{content:'';position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--text)}
+#menuBtn{display:none;font-size:18px}
+@media(max-width:760px){
+  #menuBtn{display:block}
+  .nav-links{position:fixed;top:57px;right:0;left:0;background:#111;border-bottom:1px solid var(--border);flex-direction:column;padding:18px;gap:16px;display:none}
+  .nav-links.open{display:flex}
+}
 
-  /* Fallback static image while video loads */
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-image: url('assets/images/background.jpg'); 
-    background-size: cover;
-    background-position: center;
-    filter: blur(4px) brightness(0.35) grayscale(0.3);
-    z-index: -4; /* Sits behind the video */
-  }
+/* ---------- reveal system (Motion.dev style: fade+blur+rise, staggered) ---------- */
+.rv{opacity:0;transform:translateY(26px);filter:blur(8px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1),filter .8s}
+.rv.in{opacity:1;transform:none;filter:blur(0)}
+.rv[data-d="1"]{transition-delay:.08s}.rv[data-d="2"]{transition-delay:.16s}.rv[data-d="3"]{transition-delay:.24s}.rv[data-d="4"]{transition-delay:.32s}
 
-  /* ---- Live Dust Particles Canvas ---- */
-  #dustCanvas {
-    position: fixed;
-    inset: 0;
-    z-index: -2;
-    pointer-events: none;
-  }
+/* split text */
+.split .ch{display:inline-block;opacity:0;transform:translateY(110%) rotate(4deg);transition:transform .7s cubic-bezier(.2,.7,.2,1),opacity .5s}
+.split.in .ch{opacity:1;transform:none}
+.split .w{display:inline-block;overflow:hidden;vertical-align:bottom;padding-bottom:.08em;margin-bottom:-.08em}
+.shiny{background:linear-gradient(110deg,#fff 30%,#8a8a8a 45%,#fff 60%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 5s linear infinite}
+@keyframes shine{to{background-position:200% center}}
 
-  /* ---- Dark Veil to ensure text readability ---- */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: rgba(17, 17, 17, 0.65);
-    z-index: -1;
-  }
+/* ---------- hero ---------- */
+#home{min-height:92vh;display:flex;align-items:center;padding:130px 0 40px;position:relative}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;width:100%}
+@media(max-width:900px){.hero-grid{grid-template-columns:1fr}}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-ui);font-size:11.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--text);border:1px solid var(--border2);border-radius:999px;padding:8px 14px;background:rgba(255,255,255,.04)}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:#7dff9e;box-shadow:0 0 12px #7dff9e;animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.4}}
+#home h1{font-family:var(--font-mono);font-size:clamp(2.6rem,6vw,4.4rem);line-height:1.02;margin:22px 0 16px;font-weight:400;letter-spacing:-.01em}
+.hero-sub{font-size:19px;font-style:italic;color:#cfcfcf;max-width:480px}
+.hero-tags{display:flex;flex-wrap:wrap;gap:10px;margin:24px 0}
+.pill{font-family:var(--font-ui);font-size:12px;font-weight:500;letter-spacing:.04em;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:7px 13px;background:rgba(255,255,255,.03);transition:border-color .25s,color .25s,transform .25s}
+.pill:hover{color:var(--text);border-color:var(--border2);transform:translateY(-1px)}
+.hero-cta{display:flex;gap:14px;margin:8px 0 26px;flex-wrap:wrap}
+.btn{font-family:var(--font-ui);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:14px 22px;border-radius:10px;border:1px solid var(--border2);display:inline-flex;align-items:center;gap:10px;transition:transform .2s,background .25s,border-color .25s;will-change:transform}
+.btn.primary{background:#ececec;color:#111;border-color:#ececec}
+.btn.primary:hover{background:#fff}
+.btn.ghost{background:rgba(255,255,255,.04);color:var(--text)}
+.btn.ghost:hover{border-color:#fff;background:rgba(255,255,255,.08)}
+.hero-stats{display:flex;gap:28px;border-top:1px solid var(--border);padding-top:20px;flex-wrap:wrap}
+.stat b{font-family:var(--font-mono);font-size:1.3rem;display:block;font-weight:400}
+.stat span{font-family:var(--font-ui);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.hero-card{position:relative;border:1px solid var(--border);border-radius:var(--radius);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015));padding:22px;overflow:hidden}
+.hero-card::before{content:'';position:absolute;inset:0;background:radial-gradient(400px circle at var(--spot-x) var(--spot-y),rgba(255,255,255,.12),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none}
+.hero-card:hover::before{opacity:1}
+.term{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.9;color:#c9c9c9}
+.term .k{color:#fff}
+.term .c{color:#7a7a7a}
+.scroll-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.2em;display:flex;flex-direction:column;align-items:center;gap:8px}
+.scroll-hint i{width:1px;height:36px;background:linear-gradient(var(--muted),transparent);display:block;animation:drop 1.8s infinite}
+@keyframes drop{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
 
-  /* ---- Custom Cursor ---- */
-  .cursor-dot {
-    width: 6px; height: 6px;
-    background: var(--text);
-    border-radius: 50%;
-    position: fixed;
-    top: 0; left: 0;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-50%, -50%);
-    mix-blend-mode: difference;
-  }
+/* ---------- marquee (ScrollVelocity style) ---------- */
+.marquee{border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden;white-space:nowrap;padding:14px 0;background:rgba(255,255,255,.015)}
+.marquee-track{display:inline-flex;gap:44px;padding-right:44px;animation:scrollX 26s linear infinite;font-family:var(--font-mono);font-size:13px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+.marquee:hover .marquee-track{animation-play-state:paused}
+@keyframes scrollX{to{transform:translateX(-50%)}}
 
-  .cursor-ring {
-    width: 28px; height: 28px;
-    border: 1px solid var(--muted);
-    border-radius: 50%;
-    position: fixed;
-    top: 0; left: 0;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-50%, -50%);
-    transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease;
-  }
+/* ---------- sections ---------- */
+section.block{padding:84px 0}
+.label{font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:.22em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.label::after{content:'';height:1px;width:56px;background:var(--border2)}
+h2.title{font-family:var(--font-mono);font-size:clamp(1.6rem,3.4vw,2.3rem);font-weight:400;margin-bottom:14px}
+.sub{color:var(--muted);max-width:640px;margin-bottom:34px}
+.about-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:28px}
+@media(max-width:900px){.about-grid{grid-template-columns:1fr}}
+.prose p{margin-bottom:16px;color:#cfcfcf}
+.prose p strong{color:#fff;font-weight:500}
+.panel{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);padding:24px;position:relative;overflow:hidden}
+.panel::before{content:'';position:absolute;inset:0;background:radial-gradient(380px circle at var(--spot-x) var(--spot-y),rgba(255,255,255,.09),transparent 60%);opacity:0;transition:opacity .3s}
+.panel:hover::before{opacity:1}
+.cap-list{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:12px}
+.cap-list li{display:flex;gap:12px;align-items:flex-start;font-size:15.5px;color:#cfcfcf}
+.cap-list li::before{content:'→';color:var(--text);flex-shrink:0}
 
-  .cursor-ring.hover {
-    width: 48px; height: 48px;
-    border-color: var(--text);
-  }
+/* ---------- projects bento (SpotlightCard + Tilt) ---------- */
+.proj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:980px){.proj-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.proj-grid{grid-template-columns:1fr}}
+.proj{position:relative;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card);text-decoration:none;display:flex;flex-direction:column;transition:transform .3s cubic-bezier(.2,.7,.2,1),border-color .3s;transform-style:preserve-3d;will-change:transform}
+.proj:hover{border-color:var(--border2)}
+.proj-img{aspect-ratio:16/9;overflow:hidden;background:#0a0a0a;position:relative}
+.proj-img img{width:100%;height:100%;object-fit:cover;filter:blur(5px) grayscale(.7) brightness(.72);transition:filter .5s,transform .6s cubic-bezier(.2,.7,.2,1)}
+.proj:hover .proj-img img{filter:blur(0) grayscale(.15) brightness(.95);transform:scale(1.035)}
+.proj-body{padding:20px 20px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+.proj-body h3{font-family:var(--font-mono);font-size:17px;font-weight:400}
+.proj-body p{font-size:15px;color:var(--muted);line-height:1.6}
+.proj-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.proj-tags span{font-family:var(--font-ui);font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#bbb;border:1px solid var(--border);border-radius:999px;padding:5px 10px;background:rgba(255,255,255,.03)}
+.proj-cta{margin-top:auto;padding-top:10px;font-family:var(--font-mono);font-size:12px;color:var(--text);opacity:.75;display:flex;justify-content:space-between;align-items:center}
+.proj-cta .arr{transition:transform .3s}
+.proj:hover .proj-cta .arr{transform:translate(3px,-3px)}
+.proj::after{content:'';position:absolute;inset:0;background:radial-gradient(500px circle at var(--spot-x) var(--spot-y),rgba(255,255,255,.1),transparent 55%);opacity:0;transition:opacity .3s;pointer-events:none}
+.proj:hover::after{opacity:1}
 
-  @media (hover: none) {
-    body { cursor: auto; }
-    .cursor-dot, .cursor-ring { display: none; }
-  }
+/* ---------- gallery strip ---------- */
+.g-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,320px);gap:14px;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x mandatory}
+.g-strip::-webkit-scrollbar{height:6px}
+.g-strip::-webkit-scrollbar-thumb{background:#2c2c2c;border-radius:3px}
+.g-item{scroll-snap-align:start;border:1px solid var(--border);border-radius:12px;overflow:hidden;aspect-ratio:4/3;background:#0a0a0a}
+.g-item img{width:100%;height:100%;object-fit:cover;opacity:.75;transition:opacity .4s,transform .5s}
+.g-item:hover img{opacity:1;transform:scale(1.03)}
 
-  /* ---- Splash Screen ---- */
-  .splash {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: none;
-    transition: opacity 0.8s ease;
-    text-align: center;
-  }
-  .splash.hidden { opacity: 0; pointer-events: none; }
-  .splash-brand {
-    font-family: 'Special Elite', monospace;
-    font-size: 2rem;
-    color: var(--text);
-    margin-bottom: 32px;
-  }
-  .splash-text {
-    font-family: 'Special Elite', monospace;
-    font-size: 14px;
-    color: var(--muted);
-    letter-spacing: 0.15em;
-    text-transform: lowercase;
-    animation: blink 2s ease-in-out infinite;
-  }
-  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+/* ---------- contact ---------- */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:800px){.contact-grid{grid-template-columns:1fr}}
+.discord-link{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:18px;text-decoration:none;transition:border-color .25s,background .25s,transform .25s}
+.discord-link:hover{border-color:var(--border2);background:rgba(255,255,255,.06);transform:translateY(-2px)}
+.discord-link svg{width:24px;height:24px;fill:var(--text);flex-shrink:0}
+.discord-link b{font-family:var(--font-mono);font-weight:400;font-size:15px;display:block}
+.discord-link small{font-family:var(--font-ui);font-size:12px;color:var(--muted)}
+footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted);font-family:var(--font-mono);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
-  /* ---- Navigation ---- */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 32px 48px;
-    z-index: 50;
-    background: rgba(17, 17, 17, 0.6);
-    backdrop-filter: blur(4px);
-    border-bottom: 1px solid var(--border);
-    transition: opacity 0.5s ease, transform 0.5s ease;
-  }
+/* ---------- music ---------- */
+.music{position:fixed;bottom:20px;right:22px;width:320px;max-width:calc(100vw - 32px);background:rgba(16,16,16,.88);border:1px solid var(--border);border-radius:12px;padding:12px;z-index:90;backdrop-filter:blur(12px);display:flex;align-items:center;gap:12px}
+.mp-cover{width:46px;height:46px;flex-shrink:0;overflow:hidden;border:1px solid #2c2c2c;border-radius:8px;background:#000}
+.mp-cover img{width:100%;height:100%;object-fit:cover}
+.mp-info{flex:1;min-width:0}
+.track-title{font-family:var(--font-mono);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track-subtitle{font-size:12px;color:var(--muted);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-controls{display:flex;align-items:center;gap:6px}
+.mp-btn{background:none;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px}
+.mp-btn:hover{color:#fff}
+.mp-btn svg{width:14px;height:14px;fill:currentColor}
+.mp-btn.play-main{width:32px;height:32px;border:1px solid #333;border-radius:50%}
+.vol-slider{-webkit-appearance:none;width:48px;height:2px;background:#333;outline:none}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:8px;height:8px;border-radius:50%;background:#fff}
+@media(max-width:640px){.vol-slider{display:none}.music{left:12px;right:12px;bottom:12px;width:auto}}
 
-  .brand {
-    font-family: 'Special Elite', monospace;
-    font-size: 16px;
-    color: var(--text);
-    text-decoration: none;
-    cursor: none;
-    transition: color 0.3s ease;
-  }
-  .brand:hover { color: var(--muted); }
+/* ---------- showreel (hero media) ---------- */
+.showreel{position:relative;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#0a0a0a}
+.showreel video{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;filter:saturate(.9) brightness(.95)}
+.showreel .reel-bar{display:flex;gap:8px;align-items:center;padding:12px 14px;border-top:1px solid var(--border);background:rgba(14,14,14,.9);flex-wrap:wrap}
+.reel-btn{font-family:var(--font-ui);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:999px;padding:7px 13px;cursor:pointer;transition:color .25s,border-color .25s,background .25s}
+.reel-btn.active,.reel-btn:hover{color:#fff;border-color:var(--border2);background:rgba(255,255,255,.08)}
+.reel-meta{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.reel-term{padding:14px;border-top:1px solid var(--border);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:#c9c9c9;line-height:1.8;background:rgba(255,255,255,.015)}
+.reel-term .k{color:#fff}
+.live-badge{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:8px;font-family:var(--font-ui);font-size:10.5px;font-weight:700;letter-spacing:.12em;background:rgba(0,0,0,.6);border:1px solid var(--border2);border-radius:999px;padding:6px 12px;backdrop-filter:blur(8px)}
+.live-badge i{width:7px;height:7px;border-radius:50%;background:#7dff9e;box-shadow:0 0 10px #7dff9e;animation:pulse 2s infinite}
 
-  .nav-links { display: flex; gap: 32px; align-items: center; }
+/* StarBorder (ReactBits) for primary CTA */
+.star-wrap{position:relative;display:inline-flex;border-radius:10px;padding:1.5px;overflow:hidden}
+.star-wrap::before{content:'';position:absolute;inset:-60%;background:conic-gradient(from 0deg,transparent 0 70%,#fff 82%,transparent 94%);animation:spin 3.4s linear infinite}
+.star-wrap .btn{position:relative;z-index:1;border:none}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  .nav-links a, .nav-links button {
-    font-family: 'Special Elite', monospace;
-    font-size: 13px;
-    color: var(--muted);
-    text-decoration: none;
-    background: none;
-    border: none;
-    transition: color 0.3s ease;
-    text-transform: lowercase;
-    cursor: none;
-    padding: 0;
-  }
-  .nav-links a:hover, .nav-links button:hover { color: var(--text); }
+/* ClickSpark */
+.spark{position:fixed;z-index:9998;pointer-events:none;width:8px;height:8px;border-radius:50%;background:#fff;transform:translate(-50%,-50%)}
 
-  /* ---- Layout ---- */
-  main {
-    max-width: 680px; 
-    margin: 0 0 0 48px; 
-    padding: 120px 48px 140px 0; 
-    text-align: left;
-    transition: filter 0.2s ease, opacity 0.5s ease; 
-  }
+/* glare for tilt */
+.glare{position:absolute;inset:0;background:radial-gradient(420px circle at var(--spot-x) var(--spot-y),rgba(255,255,255,.14),transparent 55%);opacity:0;transition:opacity .3s;pointer-events:none}
+.proj:hover .glare,.showreel:hover .glare{opacity:1}
 
-  section { padding: 80px 0; }
+/* gallery video */
+.g-item video{width:100%;height:100%;object-fit:cover;opacity:.85}
+.g-item:hover video{opacity:1}
+.g-cap{position:absolute;bottom:8px;left:8px;font-family:var(--font-mono);font-size:10px;background:rgba(0,0,0,.65);border:1px solid var(--border);padding:3px 8px;border-radius:999px;color:#ddd}
+.g-item{position:relative}
 
-  .label {
-    font-family: 'Special Elite', monospace;
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 24px;
-    letter-spacing: 0.05em;
-  }
-
-  /* ---- Hero ---- */
-  #home {
-    min-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding-top: 80px;
-  }
-
-  #home h1 {
-    font-family: 'Special Elite', monospace;
-    font-size: 4.5rem;
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    line-height: 1;
-    margin-bottom: 24px;
-  }
-
-  .tags {
-    font-family: 'Special Elite', monospace;
-    font-size: 14px;
-    color: var(--muted);
-    margin-bottom: 32px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-
-  .lang {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: color 0.3s ease;
-    cursor: none;
-  }
-  .lang svg { width: 14px; height: 14px; fill: var(--muted); transition: fill 0.3s ease; }
-  .lang:hover svg, .lang:hover { fill: var(--text); color: var(--text); }
-  .separator { color: var(--dim); }
-
-  .desc {
-    font-size: 18px;
-    color: var(--text);
-    max-width: 420px;
-    font-style: italic;
-  }
-
-  /* ---- About & Projects ---- */
-  .prose p { margin-bottom: 20px; }
-  .prose p:last-child { margin-bottom: 0; }
-
-  .project-list { display: flex; flex-direction: column; gap: 60px; }
-  
-  .project-item {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 32px;
-    cursor: none;
-    text-decoration: none; /* Prevents link underline */
-    color: inherit; /* Keeps text the same color */
-  }
-  
-  .project-img {
-    flex: 1;
-    aspect-ratio: 16 / 10;
-    border-radius: 2px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    background: #1a1a1a;
-    min-width: 0;
-  }
-  .project-img img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    filter: blur(6px) grayscale(0.8) brightness(0.7);
-    transition: filter 0.6s ease, transform 0.6s ease;
-  }
-  .project-item:hover .project-img img {
-    filter: blur(0) grayscale(0.3) brightness(0.9);
-    transform: scale(1.02);
-  }
-  .project-info { width: 220px; flex-shrink: 0; }
-  .project-info h3 {
-    font-family: 'Special Elite', monospace;
-    font-size: 18px;
-    font-weight: 400;
-    margin-bottom: 8px;
-    color: var(--text);
-    transition: color 0.3s ease;
-  }
-  .project-item:hover .project-info h3 { color: var(--muted); }
-  .project-desc {
-    font-size: 15px;
-    color: var(--muted);
-    opacity: 0;
-    transform: translateX(-12px);
-    transition: opacity 0.4s ease, transform 0.4s ease;
-    line-height: 1.6;
-  }
-  .project-item:hover .project-desc { opacity: 1; transform: translateX(0); }
-
-  .project-link-indicator {
-    display: inline-block;
-    margin-top: 10px;
-    font-family: 'Special Elite', monospace;
-    font-size: 12px;
-    color: var(--text);
-    opacity: 0;
-    transform: translateX(-12px);
-    transition: opacity 0.4s ease, transform 0.4s ease;
-  }
-  .project-item:hover .project-link-indicator {
-    opacity: 0.8;
-    transform: translateX(0);
-  }
-
-  /* ---- Gallery ---- */
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .grid-item {
-    aspect-ratio: 4 / 3;
-    border-radius: 2px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    background: #1a1a1a;
-    cursor: none;
-  }
-  .grid-item img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    opacity: 0.7;
-    transition: transform 0.6s ease, opacity 0.6s ease;
-  }
-  .grid-item:hover img { transform: scale(1.03); opacity: 0.95; }
-
-  /* ---- Contact Modal ---- */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(8px);
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.4s ease;
-  }
-  .modal-overlay.open { opacity: 1; pointer-events: auto; }
-
-  .modal-box {
-    background: #161616;
-    border: 1px solid var(--border);
-    padding: 48px;
-    width: 90%;
-    max-width: 420px;
-    text-align: center;
-    transform: translateY(20px) scale(0.95);
-    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-    position: relative;
-  }
-  .modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
-
-  .modal-close {
-    position: absolute;
-    top: 16px; right: 16px;
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-size: 20px;
-    cursor: none;
-    transition: color 0.3s ease;
-  }
-  .modal-close:hover { color: var(--text); }
-
-  .modal-box h2 {
-    font-family: 'Special Elite', monospace;
-    font-size: 20px;
-    margin-bottom: 32px;
-    color: var(--text);
-  }
-
-  .discord-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border);
-    padding: 16px;
-    margin-bottom: 12px;
-    text-decoration: none;
-    color: var(--text);
-    font-family: 'Special Elite', monospace;
-    font-size: 15px;
-    transition: border-color 0.3s ease, background 0.3s ease;
-    cursor: none;
-  }
-  .discord-link:hover {
-    border-color: var(--muted);
-    background: rgba(255,255,255,0.06);
-  }
-  .discord-link svg { width: 20px; height: 20px; fill: var(--text); }
-
-  /* ---- Compact Music Player ---- */
-  .music-player {
-    position: fixed;
-    bottom: 24px;
-    right: 48px;
-    width: 320px;
-    background: rgba(17, 17, 17, 0.85);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    padding: 12px;
-    z-index: 40;
-    backdrop-filter: blur(12px);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: opacity 0.5s ease, transform 0.5s ease;
-  }
-
-  .mp-cover {
-    width: 48px; height: 48px;
-    background: #000;
-    flex-shrink: 0;
-    overflow: hidden;
-    border: 1px solid var(--dim);
-  }
-  .mp-cover img { width: 100%; height: 100%; object-fit: cover; }
-
-  .mp-info {
-    flex: 1;
-    min-width: 0;
-  }
-  .track-title {
-    font-family: 'Special Elite', monospace;
-    font-size: 13px;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .track-subtitle {
-    font-family: 'EB Garamond', serif;
-    font-size: 12px;
-    color: var(--muted);
-    font-style: italic;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .mp-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  .mp-btn {
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: none;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.3s ease;
-  }
-  .mp-btn:hover { color: var(--text); }
-  .mp-btn svg { width: 14px; height: 14px; fill: var(--muted); transition: fill 0.3s ease; }
-  .mp-btn:hover svg { fill: var(--text); }
-
-  .mp-btn.play-main { width: 32px; height: 32px; border: 1px solid var(--dim); border-radius: 50%; }
-  .mp-btn.play-main svg { width: 12px; height: 12px; fill: var(--text); }
-  .mp-btn.play-main:hover { border-color: var(--text); background: rgba(255,255,255,0.05); }
-
-  .vol-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 50px;
-    height: 2px;
-    background: var(--dim);
-    outline: none;
-    cursor: none;
-    margin-left: 4px;
-  }
-  .vol-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--text);
-    cursor: none;
-  }
-  .vol-slider::-moz-range-thumb {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--text);
-    cursor: none;
-    border: none;
-  }
-
-  /* ---- Fade In ---- */
-  .fade { opacity: 0; transform: translateY(12px); transition: opacity 0.8s ease, transform 0.8s ease; }
-  .fade.visible { opacity: 1; transform: translateY(0); }
-
-  /* ==========================================
-     CINEMATIC MODE STYLES
-     ========================================== */
-  .cinematic-overlay {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 60; /* Sits above nav and main, below modal */
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.8s ease;
-  }
-
-  .cinematic-overlay h1 {
-    font-family: 'Special Elite', monospace;
-    font-size: 4rem; /* Made smaller */
-    color: var(--text);
-    text-shadow: 0 0 30px rgba(0,0,0,0.9);
-    margin: 0;
-    letter-spacing: 0.02em;
-  }
-
-  /* When body has cinematic-mode class */
-  body.cinematic-mode nav,
-  body.cinematic-mode main,
-  body.cinematic-mode .music-player {
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(-20px);
-  }
-  body.cinematic-mode .music-player {
-    transform: translateY(20px);
-  }
-
-  body.cinematic-mode .cinematic-overlay {
-    opacity: 1;
-    pointer-events: auto;
-    cursor: none; /* Keep custom cursor */
-  }
-
-  /* ---- Mobile ---- */
-  @media (max-width: 768px) {
-    body { cursor: auto; }
-    .cursor-dot, .cursor-ring { display: none; }
-    
-    nav { padding: 20px 24px; }
-    .nav-links { gap: 16px; }
-    main { margin: 0; padding: 100px 24px 120px; }
-    section { padding: 60px 0; }
-    #home { min-height: 80vh; }
-    #home h1 { font-size: 3rem; }
-    
-    .project-item { flex-direction: column; align-items: flex-start; gap: 20px; }
-    .project-info { width: 100%; }
-    .project-desc { opacity: 1; transform: none; }
-    .project-link-indicator { opacity: 0.8; transform: none; }
-    
-    .grid { grid-template-columns: 1fr; }
-    
-    .music-player {
-      left: 16px;
-      right: 16px;
-      bottom: 16px;
-      width: auto;
-      padding: 10px;
-    }
-    .vol-slider { display: none; }
-    
-    .cinematic-overlay h1 { font-size: 2.5rem; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { transition-duration: 0.01ms !important; animation: none !important; }
-    html { scroll-behavior: auto; }
-    .fade { opacity: 1; transform: none; }
-    #bgVideo { display: none; } /* Hide video for reduced motion */
-  }
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation:none!important}
+  html{scroll-behavior:auto}.rv,.split .ch{opacity:1!important;transform:none!important;filter:none!important}
+  #bgVideo,#dust{display:none}
+}
 </style>
 </head>
 <body>
 
-<!-- Live Video Background -->
+<div id="progress"></div>
+<div id="loader"><div class="l-brand">R4lzy</div><div class="l-bar"><i id="lFill"></i></div><div class="l-sub">loading</div></div>
+
 <video id="bgVideo" autoplay muted loop playsinline>
   <source src="assets/video/background.mp4" type="video/mp4">
 </video>
+<canvas id="dust"></canvas>
+<div id="veil"></div>
+<div class="cursor-dot" id="cDot"></div>
+<div class="cursor-ring" id="cRing"></div>
 
-<!-- Live Background Canvas (Dust Motes) -->
-<canvas id="dustCanvas"></canvas>
-
-<!-- Custom Cursor -->
-<div class="cursor-dot" id="cursorDot"></div>
-<div class="cursor-ring" id="cursorRing"></div>
-
-<!-- Splash Screen -->
-<div class="splash" id="splash">
-  <div class="splash-brand">R4lzy</div>
-  <div class="splash-text">click to continue</div>
-</div>
-
-<!-- Cinematic Mode Overlay -->
-<div class="cinematic-overlay" id="cinematicOverlay">
-  <h1>R4lzy</h1>
-</div>
-
-<!-- Nav -->
 <nav>
   <a href="#home" class="brand" id="logo">R4lzy</a>
-  <div class="nav-links">
-    <a href="#about">about</a>
-    <a href="#projects">projects</a>
-    <a href="#gallery">gallery</a>
-    <button id="contactBtn">contact</button>
-    <button id="cinematicBtn">cinematic</button>
+  <button id="menuBtn" aria-label="Menu">☰</button>
+  <div class="nav-links" id="navLinks">
+    <a href="#about" data-nav="about">about</a>
+    <a href="#projects" data-nav="projects">projects</a>
+    <a href="#gallery" data-nav="gallery">gallery</a>
+    <a href="#contact" data-nav="contact">contact</a>
+    <a href="https://r4l.online" target="_blank" rel="noopener">r4l.online ↗</a>
   </div>
 </nav>
 
-<main id="mainContent">
+<main class="wrap">
   <section id="home">
-    <h1>R4lzy</h1>
-    <div class="tags">
-      <span class="lang"><svg viewBox="0 0 128 128"><path d="M64 0C28.654 0 0 28.654 0 64s28.654 64 64 64 64-28.654 64-64c0-11.046-2.802-21.455-7.744-30.544C113.66 36.532 105.054 40 96 40c-22.091 0-40-17.909-40-40 0-3.052.341-6.024.985-8.87C69.31 1.07 66.7 0 64 0zM104 12a16 16 0 1 0 0 32 16 16 0 0 0 0-32z"/></svg>Lua</span>
-      <span class="separator">•</span>
-      <span class="lang"><svg viewBox="0 0 128 128"><path d="M9.032 2l9.784 110.043 44.03 12.219 44.247-12.232L116.868 2H9.032zm84.5 33.5H45.5l1.226 13.4h45.96l-3.696 41.36-27.314 7.552-27.243-7.56-1.7-19.06h13.6l.866 9.696 14.84 4.034 14.91-4.046 1.63-18.193H33.75L27.818 18h70.823z"/></svg>HTML</span>
-      <span class="separator">•</span>
-      <span class="lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5L2 7v10l9.5 4.5L21 17V7L11.5 2.5z"></path><path d="M8 12a3.5 3.5 0 0 1 6-2.5"></path><path d="M15 12a3.5 3.5 0 0 1-6 2.5"></path><path d="M14 9v6"></path><path d="M16.5 9v6"></path><path d="M13 11h5"></path><path d="M13 13h5"></path></svg>C#</span>
-      <span class="separator">•</span>
-      <span class="lang"><svg viewBox="0 0 128 128"><path d="M64 0C28.7 0 32 18 32 18v18h32v4H18s-18 0-18 32 16 32 16 32h14V86s-.5-20 20-20h28s20 .5 20-20V18s0-18-34-18zm-18 8a6 6 0 110 12 6 6 0 010-12z"/></svg>Python</span>
-      <span class="separator">•</span>
-      <span class="lang"><svg viewBox="0 0 128 128"><path d="M64 16c-4 8 4 14 4 22 0 10-8 14-8 14s12-4 12-16c0-8-8-12-8-20zm-8 28s-16 6-16 20c0 16 24 28 24 28H48s-20-8-20-24c0-12 28-24 28-24zm20 0c8 4 16 12 16 20 0 16-28 24-28 24h20s12-8 12-20c0-12-20-24-20-24zm-12 4c4 8 8 12 8 20 0 8-8 12-8 12s-8-4-8-12c0-8 4-12 8-20z"/></svg>Java</span>
-      <span class="separator">•</span>
-      <span class="lang"><svg viewBox="0 0 128 128"><path d="M64 8L72 56L120 64L72 72L64 120L56 72L8 64L56 56L64 8Z"/></svg>Claude</span>
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow rv"><span class="dot"></span><span id="decrypt">reverse engineering · desktop tools · web</span></span>
+        <h1 class="split" id="heroTitle">Building sharp tools, breaking them apart.</h1>
+        <p class="hero-sub rv" data-d="1">I'm <span class="shiny">R4lzy</span> — I like making things, breaking things, and learning how they work.</p>
+        <div class="hero-tags rv" data-d="2">
+          <span class="pill">Reverse Engineering</span><span class="pill">Lua</span><span class="pill">C++</span><span class="pill">C#</span><span class="pill">PHP</span><span class="pill">HTML / CSS / JS</span>
+        </div>
+        <div class="hero-cta rv" data-d="3">
+          <span class="star-wrap magnetic"><a class="btn primary" href="#projects">View work</a></span>
+          <a class="btn ghost magnetic" href="https://r4l.online" target="_blank" rel="noopener">r4l.online ↗</a>
+        </div>
+        <div class="hero-stats rv" data-d="4">
+          <div class="stat"><b>2</b><span>products live</span></div>
+          <div class="stat"><b>1</b><span>site designed + built</span></div>
+          <div class="stat"><b>open</b><span>lua notes published</span></div>
+        </div>
+      </div>
+      <div class="showreel spot tilt rv" data-d="2" id="tiltCard">
+        <span class="live-badge"><i></i>showreel</span>
+        <video id="reelVideo" muted loop playsinline autoplay preload="metadata" poster="assets/media/visuals.png">
+          <source id="reelSrc" src="assets/media/movement.mp4" type="video/mp4">
+        </video>
+        <div class="glare"></div>
+        <div class="reel-bar">
+          <button class="reel-btn active" data-src="assets/media/movement.mp4" data-meta="movement — 00:12">movement</button>
+          <button class="reel-btn" data-src="assets/media/aimbot.mp4" data-meta="tooling — 00:18">tooling</button>
+          <span class="reel-meta" id="reelMeta">movement — 00:12</span>
+        </div>
+        <div class="reel-term">
+          <div><span class="k">status</span> &nbsp;available &nbsp;·&nbsp; <span class="k">now</span> &nbsp;r4l.online + desktop tool</div>
+          <div style="color:#7a7a7a">surface only — internals stay private.</div>
+        </div>
+      </div>
     </div>
-    <p class="desc">I simply like to exploit and have fun.</p>
+    <div class="scroll-hint">scroll<i></i></div>
   </section>
 
-  <section id="about" class="fade">
-    <p class="label">about</p>
-    <div class="prose">
-      <p>i'm r4lzy or known as Ralzy. i spend most of my time working with lua, html, and c#.</p>
-      <p>and i love GLM 5.2,Opus 4.8,and GPT 5.5 because they make my life easier</p>
-      <p>i'm interested in reverse engineering, software analysis, and learning how applications work under the hood. i enjoy building small projects, experimenting with code, and exploring internet culture in my free time.</p>
-      <p>outside of code, idk maybe if my gf ask me to hangout with her i cant never say no.</p>
-      <p>oh yeah i almost forgot this im lowkey futures and memecoin trader lmao :P</p>
-    </div>
-  </section>
+  <div class="marquee" aria-hidden="true"><div class="marquee-track" id="mq">
+    <span>reverse engineering</span><span>•</span><span>desktop tools</span><span>•</span><span>product websites</span><span>•</span><span>lua scripts</span><span>•</span><span>r4l.online</span><span>•</span>
+    <span>reverse engineering</span><span>•</span><span>desktop tools</span><span>•</span><span>product websites</span><span>•</span><span>lua scripts</span><span>•</span><span>r4l.online</span><span>•</span>
+  </div></div>
 
-  <section id="projects" class="fade">
-    <p class="label">projects</p>
-    <div class="project-list">
-      
-      <!-- Project 1 -->
-      <a class="project-item" href="https://velocity-executor.com/" target="_blank" rel="noopener noreferrer">
-        <div class="project-img"><img src="assets/images/projects/project1.jpg" alt="Lua Project" loading="lazy"></div>
-        <div class="project-info">
-          <h3>ex Velocity dev</h3>
-          <p class="project-desc">Responsible for designing, developing, and maintaining application logic, backend systems, and core functionality while ensuring code quality and efficiency.</p>
-          <span class="project-link-indicator">view project ↗</span>
-        </div>
-      </a>
-
-      <!-- Project 2 -->
-      <a class="project-item" href="https://www.xeno.now/" target="_blank" rel="noopener noreferrer">
-        <div class="project-img"><img src="assets/images/projects/project2.jpg" alt="Web Project" loading="lazy"></div>
-        <div class="project-info">
-          <h3>ex Xeno dev</h3>
-          <p class="project-desc">Develops and maintains scripts, game systems, and core functionality using Luau, focusing on performance, reliability, and scalability.</p>
-          <span class="project-link-indicator">view project ↗</span>
-        </div>
-      </a>
-
-      <!-- Project 3 -->
-      <a class="project-item" href="https://getwave.gg/" target="_blank" rel="noopener noreferrer">
-        <div class="project-img"><img src="assets/images/projects/project3.jpg" alt="C# Project" loading="lazy"></div>
-        <div class="project-info">
-          <h3>ex Wave dev</h3>
-          <p class="project-desc">Former Executor UI Developer
-Specialized in designing and refining UI/UX for Roblox executor projects, with an emphasis on clean layouts, accessibility, and intuitive user interaction.</p>
-          <span class="project-link-indicator">view project ↗</span>
-        </div>
-      </a>
-
-      <!-- Project 4 -->
-      <a class="project-item" href="https://rscripts.net/@r4lzy" target="_blank" rel="noopener noreferrer">
-        <div class="project-img"><img src="assets/images/projects/project4.jpg" alt="LARP Project" loading="lazy"></div>
-        <div class="project-info">
-          <h3>Roblox scripts</h3>
-          <p class="project-desc">Roblox Reverse Engineering & Exploit Researcher — Yeah so basically im exploiting,spying,assets to make unfair advantage.</p>
-          <span class="project-link-indicator">view project ↗</span>
-        </div>
-      </a>
-
+  <section id="about" class="block">
+    <p class="label rv">about</p>
+    <h2 class="title rv" data-d="1">Research-minded builder.</h2>
+    <p class="sub rv" data-d="2">I spend most of my time taking software apart and rebuilding the interesting bits — then shipping a clean surface on top.</p>
+    <div class="about-grid">
+      <div class="prose rv" data-d="2">
+        <p>I'm <strong>r4lzy aka Ralzy</strong>. My lane is <strong>reverse engineering + a thin, polished surface</strong>: desktop tools and websites, nothing more specific than that.</p>
+        <p>I work across <strong>Lua, C++, C#, PHP and HTML/CSS/JS</strong> — enough to prototype fast and ship finished products like r4l.online end to end.</p>
+        <p>Outside of code — futures, memecoins, and yes, if my gf asks to hang out I can never say no.</p>
+      </div>
+      <div class="panel spot rv" data-d="3">
+        <p class="label" style="margin-bottom:8px">what i do</p>
+        <ul class="cap-list">
+          <li>Take apps apart — behavior, file formats, update flows</li>
+          <li>Build desktop tools with config + auto-update</li>
+          <li>Design + build product sites: tour, pricing, dashboard, keys</li>
+          <li>Publish small Lua scripts + research notes</li>
+        </ul>
+      </div>
     </div>
   </section>
 
-  <section id="gallery" class="fade">
-    <p class="label">gallery</p>
-    <div class="grid">
-      <div class="grid-item"><img src="assets/images/gallery/gallery1.jpg" alt="" loading="lazy"></div>
-      <div class="grid-item"><img src="assets/images/gallery/gallery2.jpg" alt="" loading="lazy"></div>
-      <div class="grid-item"><img src="assets/images/gallery/gallery3.jpg" alt="" loading="lazy"></div>
-      <div class="grid-item"><img src="assets/images/gallery/gallery4.jpg" alt="" loading="lazy"></div>
-      <div class="grid-item"><img src="assets/images/gallery/gallery5.jpg" alt="" loading="lazy"></div>
-      <div class="grid-item"><img src="assets/images/gallery/gallery6.jpg" alt="" loading="lazy"></div>
+  <section id="projects" class="block">
+    <p class="label rv">projects</p>
+    <h2 class="title rv" data-d="1">Selected work.</h2>
+    <p class="sub rv" data-d="2">Surface only — what it is and where to find it. No internals.</p>
+    <div class="proj-grid">
+      <a class="proj spot tilt rv" data-d="1" href="https://r4l.online/download" target="_blank" rel="noopener noreferrer">
+        <div class="proj-img"><img src="assets/media/visuals.png" alt="R4L External" loading="lazy"></div>
+        <div class="glare"></div>
+        <div class="proj-body">
+          <h3>R4L External</h3>
+          <p>Desktop tool I build and maintain. Clean UI, per-game configs, auto-updates.</p>
+          <div class="proj-tags"><span>C++</span><span>Desktop</span><span>Live</span></div>
+          <div class="proj-cta"><span>view project</span><span class="arr">↗</span></div>
+        </div>
+      </a>
+      <a class="proj spot tilt rv" data-d="2" href="https://r4l.online" target="_blank" rel="noopener noreferrer">
+        <div class="proj-img"><img src="assets/media/customization1.png" alt="r4l.online website" loading="lazy"></div>
+        <div class="glare"></div>
+        <div class="proj-body">
+          <h3>r4l.online</h3>
+          <p>Product website I designed and built. Tour, pricing, dashboard and key system.</p>
+          <div class="proj-tags"><span>PHP</span><span>HTML / CSS / JS</span><span>Live</span></div>
+          <div class="proj-cta"><span>visit site</span><span class="arr">↗</span></div>
+        </div>
+      </a>
+      <a class="proj spot tilt rv" data-d="3" href="https://rscripts.net/@r4lzy" target="_blank" rel="noopener noreferrer">
+        <div class="proj-img"><img src="assets/images/projects/project4.jpg" alt="Lua scripts" loading="lazy"></div>
+        <div class="proj-body">
+          <h3>Lua scripts</h3>
+          <p>Small Lua scripts and research notes I publish publicly.</p>
+          <div class="proj-tags"><span>Lua</span><span>Notes</span><span>Public</span></div>
+          <div class="proj-cta"><span>view scripts</span><span class="arr">↗</span></div>
+        </div>
+      </a>
     </div>
   </section>
+
+  <section id="gallery" class="block">
+    <p class="label rv">gallery</p>
+    <h2 class="title rv" data-d="1">Fragments.</h2>
+    <p class="sub rv" data-d="2">Drag / scroll sideways. Hover a clip to play.</p>
+    <div class="g-strip rv" data-d="2" id="gStrip">
+      <div class="g-item"><video muted loop playsinline preload="none" poster="assets/media/visuals.png" data-hover><source src="assets/media/movement.mp4" type="video/mp4"></video><span class="g-cap">movement</span></div>
+      <div class="g-item"><video muted loop playsinline preload="none" poster="assets/media/customization1.png" data-hover><source src="assets/media/aimbot.mp4" type="video/mp4"></video><span class="g-cap">tooling</span></div>
+      <div class="g-item"><img src="assets/media/visuals.png" alt="product UI" loading="lazy"><span class="g-cap">ui</span></div>
+      <div class="g-item"><img src="assets/media/customization1.png" alt="customization" loading="lazy"><span class="g-cap">themes</span></div>
+      <div class="g-item"><img src="assets/media/customization2.png" alt="settings" loading="lazy"><span class="g-cap">settings</span></div>
+      <div class="g-item"><img src="assets/media/r4l-favicon.png" alt="brand" loading="lazy"><span class="g-cap">brand</span></div>
+      <div class="g-item"><img src="assets/images/gallery/gallery2.jpg" alt="" loading="lazy"></div>
+      <div class="g-item"><img src="assets/images/gallery/gallery3.jpg" alt="" loading="lazy"></div>
+      <div class="g-item"><img src="assets/images/gallery/gallery4.jpg" alt="" loading="lazy"></div>
+      <div class="g-item"><img src="assets/images/gallery/gallery5.jpg" alt="" loading="lazy"></div>
+      <div class="g-item"><img src="assets/images/gallery/gallery6.jpg" alt="" loading="lazy"></div>
+    </div>
+  </section>
+
+  <section id="contact" class="block">
+    <p class="label rv">contact</p>
+    <h2 class="title rv" data-d="1">Say hi.</h2>
+    <p class="sub rv" data-d="2">Fastest way is Discord.</p>
+    <div class="contact-grid">
+      <a href="https://discord.com/users/@ralzye" target="_blank" class="discord-link spot rv" data-d="2">
+        <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+        <div><b>@ralzye</b><small>primary — discord</small></div>
+      </a>
+      <a href="https://discord.com/users/@ralzydelunaa" target="_blank" class="discord-link spot rv" data-d="3">
+        <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+        <div><b>@ralzydelunaa</b><small>alt — discord</small></div>
+      </a>
+    </div>
+  </section>
+
+  <footer><span>© 2026 R4lzy</span><span>reverse engineering · surface-level web</span></footer>
 </main>
 
-<!-- Contact Modal -->
-<div class="modal-overlay" id="contactModal">
-  <div class="modal-box">
-    <button class="modal-close" id="modalClose">&times;</button>
-    <h2>contact</h2>
-    <a href="https://discord.com/users/@ralzye" target="_blank" class="discord-link">
-      <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.010c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.010c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-      <span>@ralzye</span>
-    </a>
-    <a href="https://discord.com/users/@ralzydelunaa" target="_blank" class="discord-link">
-      <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.010c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.010c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-      <span>@ralzydelunaa</span>
-    </a>
-  </div>
-</div>
-
-<!-- Compact Music Player -->
-<div class="music-player" id="musicPlayer">
-  <div class="mp-cover">
-    <img id="coverImg" src="assets/images/covers/cover1.jpg" alt="Album Cover">
-  </div>
-  <div class="mp-info">
-    <div class="track-title" id="trackTitle">Track Name</div>
-    <div class="track-subtitle" id="trackArtist">Artist</div>
-  </div>
+<div class="music" id="musicPlayer">
+  <div class="mp-cover"><img id="coverImg" src="assets/images/covers/cover1.jpg" alt="cover"></div>
+  <div class="mp-info"><div class="track-title" id="trackTitle">—</div><div class="track-subtitle" id="trackArtist">—</div></div>
   <div class="mp-controls">
-    <button class="mp-btn" id="prevBtn" aria-label="Previous track">
-      <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-    </button>
-    <button class="mp-btn play-main" id="playBtn" aria-label="Play music">
-      <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-      <svg id="pauseIcon" viewBox="0 0 24 24" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-    </button>
-    <button class="mp-btn" id="nextBtn" aria-label="Next track">
-      <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-    </button>
-    <input type="range" min="0" max="1" step="0.01" value="0.5" class="vol-slider" id="volSlider" aria-label="Volume">
+    <button class="mp-btn" id="prevBtn" aria-label="prev"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+    <button class="mp-btn play-main" id="playBtn" aria-label="play"><svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg id="pauseIcon" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
+    <button class="mp-btn" id="nextBtn" aria-label="next"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+    <input type="range" min="0" max="1" step="0.01" value="0.5" class="vol-slider" id="volSlider" aria-label="volume">
   </div>
 </div>
-
-<!-- Audio Element -->
 <audio id="audioPlayer" loop></audio>
 
 <script>
-  // ==========================================
-  // LIVE DUST PARTICLES
-  // ==========================================
-  const dustCanvas = document.getElementById('dustCanvas');
-  const dctx = dustCanvas.getContext('2d');
-  let w, h, dustParticles;
+// ---------- loader ----------
+const lFill=document.getElementById('lFill'),loader=document.getElementById('loader');
+let lp=0;const li=setInterval(()=>{lp=Math.min(lp+Math.random()*28,92);lFill.style.width=lp+'%';},160);
+window.addEventListener('load',()=>{clearInterval(li);lFill.style.width='100%';setTimeout(()=>loader.classList.add('done'),350);});
+setTimeout(()=>loader.classList.add('done'),3500);
+loader.addEventListener('click',()=>loader.classList.add('done'));
 
-  function resizeCanvas() {
-    w = dustCanvas.width = window.innerWidth;
-    h = dustCanvas.height = window.innerHeight;
-  }
+// ---------- progress ----------
+const prog=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;prog.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
 
-  function initDust() {
-    dustParticles = [];
-    const count = Math.floor((w * h) / 20000); 
-    for (let i = 0; i < count; i++) {
-      dustParticles.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        r: Math.random() * 1.2 + 0.3,
-        vx: (Math.random() - 0.5) * 0.15,
-        vy: (Math.random() - 0.5) * 0.15,
-        alpha: Math.random() * 0.3 + 0.1
-      });
-    }
-  }
+// ---------- split text (SplitText style) ----------
+const ht=document.getElementById('heroTitle');
+(()=>{const t=ht.textContent;ht.textContent='';t.split(' ').forEach((word,wi)=>{const w=document.createElement('span');w.className='w';[...word].forEach(c=>{const s=document.createElement('span');s.className='ch';s.textContent=c;w.appendChild(s)});ht.appendChild(w);ht.appendChild(document.createTextNode(' '))});
+requestAnimationFrame(()=>requestAnimationFrame(()=>ht.classList.add('in'));
+[...ht.querySelectorAll('.ch')].forEach((c,i)=>c.style.transitionDelay=(i*22)+'ms');})();
 
-  function drawDust() {
-    dctx.clearRect(0, 0, w, h);
-    dustParticles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < 0) p.x = w;
-      if (p.x > w) p.x = 0;
-      if (p.y < 0) p.y = h;
-      if (p.y > h) p.y = 0;
-      
-      dctx.beginPath();
-      dctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      dctx.fillStyle = `rgba(212, 212, 212, ${p.alpha})`;
-      dctx.fill();
-    });
-    requestAnimationFrame(drawDust);
-  }
+// ---------- decrypt eyebrow (DecryptedText style) ----------
+(()=>{const el=document.getElementById('decrypt');if(!el)return;const orig=el.textContent,chars='!<>-_\\/[]{}—=+*^?#';let f=0;const iv=setInterval(()=>{el.textContent=orig.split('').map((c,i)=>i<f?c:(c===' '?' ':chars[Math.floor(Math.random()*chars.length)])).join('');f+=2;if(f>orig.length)clearInterval(iv)},40);})();
 
-  window.addEventListener('resize', () => { resizeCanvas(); initDust(); });
-  resizeCanvas();
-  initDust();
-  drawDust();
+// ---------- inview (Motion.dev style) ----------
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12,rootMargin:'0px 0px -40px'});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
 
-  // ---- Safe LocalStorage ----
-  const safeStorage = {
-    get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
-    set(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
-  };
+// ---------- nav ----------
+const menuBtn=document.getElementById('menuBtn'),navLinks=document.getElementById('navLinks');
+menuBtn.addEventListener('click',()=>navLinks.classList.toggle('open'));
+navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>navLinks.classList.remove('open')));
+const secIO=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('[data-nav]').forEach(a=>a.classList.toggle('active',a.dataset.nav===e.target.id))}}),{rootMargin:'-40% 0px -55%'});
+['about','projects','gallery','contact'].forEach(id=>{const s=document.getElementById(id);if(s)secIO.observe(s)});
+document.getElementById('logo').addEventListener('click',e=>{e.preventDefault();scrollTo({top:0,behavior:'smooth'})});
 
-  // ---- Smooth Scroll for Logo ----
-  document.getElementById('logo').addEventListener('click', (e) => {
-    e.preventDefault();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
+// ---------- magnetic (Magnet style) ----------
+if(matchMedia('(hover:hover)').matches){
+document.querySelectorAll('.magnetic').forEach(el=>{
+  el.addEventListener('mousemove',e=>{const r=el.getBoundingClientRect();const x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2;el.style.transform=`translate(${x*.14}px,${y*.18}px)`});
+  el.addEventListener('mouseleave',()=>el.style.transform='');
+});}
 
-  // ---- Fade In Observer ----
-  const fadeObserver = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        fadeObserver.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
+// ---------- spotlight + tilt (SpotlightCard style) ----------
+document.querySelectorAll('.spot,.proj,.panel,.hero-card').forEach(card=>{
+  card.addEventListener('mousemove',e=>{const r=card.getBoundingClientRect();card.style.setProperty('--spot-x',(e.clientX-r.left)+'px');card.style.setProperty('--spot-y',(e.clientY-r.top)+'px')});
+});
+if(matchMedia('(hover:hover)').matches){
+document.querySelectorAll('.tilt').forEach(card=>{
+  card.addEventListener('mousemove',e=>{const r=card.getBoundingClientRect();const rx=((e.clientY-r.top)/r.height-.5)*-7,ry=((e.clientX-r.left)/r.width-.5)*9;card.style.transform=`perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px)`});
+  card.addEventListener('mouseleave',()=>card.style.transform='');
+});}
 
-  document.querySelectorAll('.fade').forEach(el => fadeObserver.observe(el));
+// ---------- showreel switch ----------
+(()=>{const v=document.getElementById('reelVideo'),src=document.getElementById('reelSrc'),meta=document.getElementById('reelMeta');if(!v)return;document.querySelectorAll('.reel-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.reel-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');src.src=b.dataset.src;meta.textContent=b.dataset.meta||'';v.load();v.play().catch(()=>{})}))})();
 
-  // ---- Contact Modal ----
-  const modal = document.getElementById('contactModal');
-  const contactBtn = document.getElementById('contactBtn');
-  const modalClose = document.getElementById('modalClose');
+// ---------- scroll-velocity marquee ----------
+(()=>{const t=document.getElementById('mq');if(!t)return;let vel=0,last=scrollY;addEventListener('scroll',()=>{vel=Math.min(Math.abs(scrollY-last)*.06,6);last=scrollY},{passive:true});(function tick(){vel*=.94;const base=26;const speed=Math.max(.4,1-vel*.18);t.style.animationDuration=(base*speed)+'s';requestAnimationFrame(tick)})})();
 
-  contactBtn.addEventListener('click', () => modal.classList.add('open'));
-  modalClose.addEventListener('click', () => modal.classList.remove('open'));
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) modal.classList.remove('open');
-  });
+// ---------- clickspark ----------
+(()=>{if(!matchMedia('(hover:hover)').matches)return;addEventListener('click',e=>{for(let i=0;i<6;i++){const s=document.createElement('span');s.className='spark';s.style.left=e.clientX+'px';s.style.top=e.clientY+'px';document.body.appendChild(s);const a=(i/6)*Math.PI*2;const d=26+Math.random()*26;requestAnimationFrame(()=>{s.style.transition='transform .5s ease-out,opacity .5s';s.style.transform=`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(.2)`;s.style.opacity='0'});setTimeout(()=>s.remove(),550)}})})();
 
-  // ---- CINEMATIC MODE LOGIC ----
-  const cinematicBtn = document.getElementById('cinematicBtn');
-  const cinematicOverlay = document.getElementById('cinematicOverlay');
+// ---------- gallery hover-play + pause offscreen ----------
+(()=>{const vids=[...document.querySelectorAll('video[data-hover]')];vids.forEach(v=>{const item=v.closest('.g-item');item.addEventListener('mouseenter',()=>v.play().catch(()=>{}));item.addEventListener('mouseleave',()=>v.pause())});const vio=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;if(v.tagName!=='VIDEO')return;if(!e.isIntersecting)v.pause();else if(v.hasAttribute('data-auto'))v.play().catch(()=>{})}));document.querySelectorAll('video').forEach(v=>vio.observe(v))})();
 
-  cinematicBtn.addEventListener('click', () => {
-    document.body.classList.add('cinematic-mode');
-  });
+// ---------- gallery drag ----------
+(()=>{const s=document.getElementById('gStrip');if(!s)return;let down=false,sx=0,sl=0;s.addEventListener('pointerdown',e=>{down=true;sx=e.clientX;sl=s.scrollLeft});addEventListener('pointerup',()=>down=false);s.addEventListener('pointermove',e=>{if(!down)return;s.scrollLeft=sl-(e.clientX-sx)});})();
 
-  // Click on overlay to exit
-  cinematicOverlay.addEventListener('click', () => {
-    document.body.classList.remove('cinematic-mode');
-  });
+// ---------- dust (light) ----------
+(()=>{const c=document.getElementById('dust');if(!c)return;if(matchMedia('(prefers-reduced-motion: reduce)').matches){c.remove();return}const x=c.getContext('2d');let w,h,ps;const rs=()=>{w=c.width=innerWidth;h=c.height=innerHeight};rs();addEventListener('resize',rs);const n=Math.min(70,Math.floor(innerWidth*innerHeight/30000));ps=Array.from({length:n},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.3+.3,vx:(Math.random()-.5)*.18,vy:(Math.random()-.5)*.18,a:Math.random()*.28+.08}));
+(function dr(){x.clearRect(0,0,w,h);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=w;if(p.x>w)p.x=0;if(p.y<0)p.y=h;if(p.y>h)p.y=0;x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fillStyle=`rgba(220,220,220,${p.a})`;x.fill()});if(!document.hidden)requestAnimationFrame(dr);else setTimeout(()=>requestAnimationFrame(dr),500)})();document.addEventListener('visibilitychange',()=>{if(!document.hidden)requestAnimationFrame(()=>{})});
+const v=document.getElementById('bgVideo');if(matchMedia('(max-width:760px)').matches&&v)v.remove();})();
 
-  // Press ESC to exit
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      document.body.classList.remove('cinematic-mode');
-    }
-  });
+// ---------- cursor ----------
+(()=>{const d=document.getElementById('cDot'),r=document.getElementById('cRing');if(!matchMedia('(hover:hover)').matches)return;let mx=0,my=0,rx=0,ry=0;addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;d.style.left=mx+'px';d.style.top=my+'px'});(function an(){rx+=(mx-rx)*.16;ry+=(my-ry)*.16;r.style.left=rx+'px';r.style.top=ry+'px';requestAnimationFrame(an)})();document.querySelectorAll('a,button,.proj,.g-item').forEach(el=>{el.addEventListener('mouseenter',()=>r.classList.add('hover'));el.addEventListener('mouseleave',()=>r.classList.remove('hover'))});})();
 
-  // ==========================================
-  // COMPACT MUSIC PLAYER (Custom Songs)
-  // ==========================================
-  const tracks = [
-    { name: "Entry five", artist: "Jaydes", src: "assets/music/song1.mp3", cover: "assets/images/covers/cover1.jpg" },
-    { name: "Goodlooking boy", artist: "suki waterhouse", src: "assets/music/song2.mp3", cover: "assets/images/covers/cover2.jpg" },
-    { name: "sometimes", artist: "idk the artist gng", src: "assets/music/song3.mp3", cover: "assets/images/covers/cover3.jpg" },
-    { name: "as the world caves in", artist: "matt maltese", src: "assets/music/song4.mp3", cover: "assets/images/covers/cover4.jpg" },
-    { name: "Bangkit usai pesta", artist: "the goat minor banger \"Harum Manis\"", src: "assets/music/song5.mp3", cover: "assets/images/covers/cover5.jpg" }
-  ];
-
-  const audioPlayer = document.getElementById('audioPlayer');
-  const splash = document.getElementById('splash');
-  const playBtn = document.getElementById('playBtn');
-  const playIcon = document.getElementById('playIcon');
-  const pauseIcon = document.getElementById('pauseIcon');
-  const volSlider = document.getElementById('volSlider');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const trackTitle = document.getElementById('trackTitle');
-  const trackArtist = document.getElementById('trackArtist');
-  const coverImg = document.getElementById('coverImg');
-
-  let currentTrack = 0;
-  let currentVolume = 0.5;
-  let isPlaying = false;
-
-  const savedVol = safeStorage.get('r4lzy_vol');
-  const savedTrack = safeStorage.get('r4lzy_track');
-  const isPausedPreference = safeStorage.get('r4lzy_playing') === 'false';
-
-  if (savedVol !== null) {
-    currentVolume = parseFloat(savedVol);
-    volSlider.value = currentVolume;
-    audioPlayer.volume = currentVolume;
-  }
-  if (savedTrack !== null) {
-    currentTrack = parseInt(savedTrack) || 0;
-  }
-
-  function loadTrack(index) {
-    currentTrack = index;
-    const track = tracks[currentTrack];
-    audioPlayer.src = track.src;
-    trackTitle.textContent = track.name;
-    trackArtist.textContent = track.artist;
-    coverImg.src = track.cover;
-    safeStorage.set('r4lzy_track', currentTrack.toString());
-  }
-
-  function updateUI() {
-    if (isPlaying) {
-      playIcon.style.display = 'none';
-      pauseIcon.style.display = 'block';
-      playBtn.setAttribute('aria-label', 'Pause music');
-    } else {
-      playIcon.style.display = 'block';
-      pauseIcon.style.display = 'none';
-      playBtn.setAttribute('aria-label', 'Play music');
-    }
-  }
-
-  function playAudio() {
-    if (!audioPlayer.src) loadTrack(currentTrack);
-    audioPlayer.play().then(() => {
-      isPlaying = true;
-      updateUI();
-      safeStorage.set('r4lzy_playing', 'true');
-    }).catch(() => {
-      isPlaying = false;
-      updateUI();
-    });
-  }
-
-  function pauseAudio() {
-    audioPlayer.pause();
-    isPlaying = false;
-    updateUI();
-    safeStorage.set('r4lzy_playing', 'false');
-  }
-
-  function changeTrack(index) {
-    const wasPlaying = isPlaying;
-    loadTrack(index);
-    if (wasPlaying) {
-      playAudio();
-    } else {
-      updateUI();
-    }
-  }
-
-  playBtn.addEventListener('click', () => { isPlaying ? pauseAudio() : playAudio(); });
-  
-  volSlider.addEventListener('input', (e) => {
-    currentVolume = parseFloat(e.target.value);
-    audioPlayer.volume = currentVolume;
-    safeStorage.set('r4lzy_vol', currentVolume);
-  });
-
-  prevBtn.addEventListener('click', () => {
-    let newIndex = currentTrack - 1;
-    if (newIndex < 0) newIndex = tracks.length - 1;
-    changeTrack(newIndex);
-  });
-
-  nextBtn.addEventListener('click', () => {
-    let newIndex = currentTrack + 1;
-    if (newIndex >= tracks.length) newIndex = 0;
-    changeTrack(newIndex);
-  });
-
-  loadTrack(currentTrack);
-  updateUI();
-
-  splash.addEventListener('click', () => {
-    splash.classList.add('hidden');
-    if (!isPausedPreference) {
-      playAudio();
-    }
-  });
-
-  // ==========================================
-  // CUSTOM CURSOR LOGIC
-  // ==========================================
-  const cursorDot = document.getElementById('cursorDot');
-  const cursorRing = document.getElementById('cursorRing');
-  let mouseX = 0, mouseY = 0;
-  let ringX = 0, ringY = 0;
-
-  document.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    cursorDot.style.left = mouseX + 'px';
-    cursorDot.style.top = mouseY + 'px';
-  });
-
-  function animateCursor() {
-    ringX += (mouseX - ringX) * 0.15;
-    ringY += (mouseY - ringY) * 0.15;
-    cursorRing.style.left = ringX + 'px';
-    cursorRing.style.top = ringY + 'px';
-    requestAnimationFrame(animateCursor);
-  }
-  animateCursor();
-
-  document.querySelectorAll('a, button, .lang, .project-item, .grid-item, .vol-slider, .cinematic-overlay').forEach(el => {
-    el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
-    el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
-  });
-
-  // ==========================================
-  // MOTION BLUR ON SCROLL LOGIC
-  // ==========================================
-  let lastScrollTop = 0;
-  let blurTimeout;
-  const mainContent = document.getElementById('mainContent');
-
-  window.addEventListener('scroll', () => {
-    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    let velocity = Math.abs(scrollTop - lastScrollTop);
-    lastScrollTop = scrollTop;
-
-    let blurAmount = Math.min(velocity * 0.1, 3);
-    
-    if (blurAmount > 0.5) {
-      mainContent.style.filter = `blur(${blurAmount}px)`;
-    } else {
-      mainContent.style.filter = 'none';
-    }
-
-    clearTimeout(blurTimeout);
-    blurTimeout = setTimeout(() => {
-      mainContent.style.filter = 'none';
-    }, 150);
-  });
+// ---------- music (kept, compact) ----------
+const tracks=[
+ {name:"Entry five",artist:"Jaydes",src:"assets/music/song1.mp3",cover:"assets/images/covers/cover1.jpg"},
+ {name:"Goodlooking boy",artist:"suki waterhouse",src:"assets/music/song2.mp3",cover:"assets/images/covers/cover2.jpg"},
+ {name:"sometimes",artist:"idk the artist gng",src:"assets/music/song3.mp3",cover:"assets/images/covers/cover3.jpg"},
+ {name:"as the world caves in",artist:"matt maltese",src:"assets/music/song4.mp3",cover:"assets/images/covers/cover4.jpg"},
+ {name:"Bangkit usai pesta",artist:"Harum Manis",src:"assets/music/song5.mp3",cover:"assets/images/covers/cover5.jpg"}];
+const ap=document.getElementById('audioPlayer'),playBtn=document.getElementById('playBtn'),playIcon=document.getElementById('playIcon'),pauseIcon=document.getElementById('pauseIcon'),vol=document.getElementById('volSlider'),tt=document.getElementById('trackTitle'),ta=document.getElementById('trackArtist'),ci=document.getElementById('coverImg');
+let cur=0,playing=false;ap.volume=.5;
+function loadT(i){cur=i;const t=tracks[cur];ap.src=t.src;tt.textContent=t.name;ta.textContent=t.artist;ci.src=t.cover}
+function ui(){playIcon.style.display=playing?'none':'block';pauseIcon.style.display=playing?'block':'none'}
+function play(){if(!ap.src)loadT(cur);ap.play().then(()=>{playing=true;ui()}).catch(()=>{playing=false;ui()})}
+function pause(){ap.pause();playing=false;ui()}
+playBtn.addEventListener('click',()=>playing?pause():play());
+vol.addEventListener('input',e=>ap.volume=parseFloat(e.target.value));
+document.getElementById('prevBtn').addEventListener('click',()=>{loadT((cur-1+tracks.length)%tracks.length);if(playing)play()});
+document.getElementById('nextBtn').addEventListener('click',()=>{loadT((cur+1)%tracks.length);if(playing)play()});
+loadT(0);ui();
 </script>
-
 </body>
 </html>
