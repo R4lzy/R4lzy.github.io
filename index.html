@@ -29,15 +29,18 @@ img{display:block;max-width:100%}
 
 /* ---------- progress + preloader ---------- */
 #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--text);z-index:200}
-#loader{position:fixed;inset:0;background:#0b0b0b;z-index:1000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;transition:opacity .5s ease,visibility .5s}
-#loader.done{opacity:0;visibility:hidden}
+#loader{position:fixed;inset:0;background:#0b0b0b;z-index:1000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;transition:transform .8s cubic-bezier(.7,0,.2,1),visibility .8s}
+#loader.done{transform:translateY(-100%);visibility:hidden}
 /* hard fallback: never trap users on the loader even if all JS fails */
 #loader{animation:forceHide .6s ease 6s forwards}
 @keyframes forceHide{to{opacity:0;visibility:hidden}}
-#loader .l-brand{font-family:var(--font-mono);font-size:1.4rem;letter-spacing:.04em}
-#loader .l-bar{width:180px;height:2px;background:#262626;overflow:hidden;border-radius:2px}
-#loader .l-bar i{display:block;height:100%;width:0;background:var(--text);transition:width .2s}
-#loader .l-sub{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+.l-mark{width:64px;height:64px;object-fit:contain;animation:markIn 1s ease both}
+@keyframes markIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+#loader .l-brand{font-family:var(--font-mono);font-size:1.2rem;letter-spacing:.06em}
+.l-row{display:flex;align-items:center;gap:12px}
+#loader .l-bar{width:170px;height:2px;background:#262626;overflow:hidden;border-radius:2px}
+#loader .l-bar i{display:block;height:100%;width:0;background:var(--text)}
+#lPct{font-family:var(--font-mono);font-size:11px;color:var(--muted);min-width:36px;text-align:right}
 
 /* ---------- bg ---------- */
 #bgVideo{position:fixed;top:50%;left:50%;min-width:100vw;min-height:100vh;width:auto;height:auto;z-index:-4;transform:translate(-50%,-50%) scale(1.08);filter:blur(7px) brightness(.16) saturate(.75);object-fit:cover;pointer-events:none}
@@ -211,7 +214,7 @@ footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted
 <body>
 
 <div id="progress"></div>
-<div id="loader"><div class="l-brand">R4lzy</div><div class="l-bar"><i id="lFill"></i></div><div class="l-sub">loading</div></div>
+<div id="loader"><img class="l-mark" src="assets/media/r4l-rebranded.png" alt=""><div class="l-brand">r4lzy</div><div class="l-row"><div class="l-bar"><i id="lFill"></i></div><span id="lPct">0%</span></div></div>
 
 <video id="bgVideo" autoplay muted loop playsinline preload="auto">
   <source src="assets/video/background.mp4" type="video/mp4">
@@ -354,7 +357,7 @@ footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted
 
 <script>
 // ---------- loader (isolated: runs even if the main script below fails) ----------
-(function(){var f=document.getElementById('lFill'),l=document.getElementById('loader');if(!l)return;var p=0;var iv=setInterval(function(){p=Math.min(p+Math.random()*28,92);if(f)f.style.width=p+'%';},160);function done(){clearInterval(iv);if(f)f.style.width='100%';l.classList.add('done')}window.addEventListener('load',function(){setTimeout(done,350)});setTimeout(done,3500);l.addEventListener('click',done);})();
+(function(){var f=document.getElementById('lFill'),t=document.getElementById('lPct'),l=document.getElementById('loader');if(!l)return;var v=0,over=false;function render(){if(f)f.style.width=v+'%';if(t)t.textContent=Math.floor(v)+'%'}var iv=setInterval(function(){if(v<90){v+=(90-v)*.055+.3;if(v>90)v=90;render()}},90);function done(){if(over)return;over=true;clearInterval(iv);v=100;render();setTimeout(function(){l.classList.add('done')},300)}window.addEventListener('load',function(){setTimeout(done,350)});setTimeout(done,3500);l.addEventListener('click',done);})();
 </script>
 
 <script>
