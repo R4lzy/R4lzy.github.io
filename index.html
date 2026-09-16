@@ -42,12 +42,18 @@ img{display:block;max-width:100%}
 /* ---------- bg ---------- */
 #veil{position:fixed;inset:0;background:radial-gradient(900px 480px at 50% -80px,rgba(255,255,255,.06),transparent 60%),#0d0d0d;z-index:-2;pointer-events:none}
 
-/* ---------- cursor (trailing ring, native cursor kept) ---------- */
-.cursor-dot,.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:9999;border-radius:50%}
-.cursor-dot{width:6px;height:6px;background:var(--text);transform:translate(-50%,-50%);mix-blend-mode:difference}
-.cursor-ring{width:30px;height:30px;border:1px solid rgba(255,255,255,.35);transform:translate(-50%,-50%);transition:width .25s,height .25s,border-color .25s}
-.cursor-ring.hover{width:52px;height:52px;border-color:rgba(255,255,255,.8)}
-@media(hover:none),(pointer:coarse){.cursor-dot,.cursor-ring{display:none}}
+/* ---------- crosshair cursor ---------- */
+#xhair{position:fixed;top:0;left:0;z-index:9999;pointer-events:none;mix-blend-mode:difference;transition:transform .22s ease}
+#xhair i{position:absolute;background:#fff;display:block;transition:transform .22s ease}
+#xhair .h{width:18px;height:2px;left:-9px;top:-1px}
+#xhair .v{width:2px;height:18px;left:-1px;top:-9px}
+#xhair.big{transform:rotate(45deg)}
+#xhair.big .h{transform:scaleX(1.4)}
+#xhair.big .v{transform:scaleY(1.4)}
+#xhair.down{transform:scale(.7)}
+#xhair.big.down{transform:rotate(45deg) scale(1)}
+@media(hover:hover) and (pointer:fine){*{cursor:none!important}}
+@media(hover:none),(pointer:coarse){#xhair{display:none}}
 
 /* ---------- nav ---------- */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:16px 28px;background:rgba(14,14,14,.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
@@ -79,15 +85,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content
 /* ---------- hero ---------- */
 #home{min-height:88vh;display:flex;align-items:center;padding:130px 0 40px;position:relative}
 .hero-stack{max-width:640px;width:100%}
-.eyebrow{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-ui);font-size:11.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--text);border:1px solid var(--border2);border-radius:999px;padding:8px 14px;background:rgba(255,255,255,.04)}
-.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:#7dff9e;box-shadow:0 0 12px #7dff9e;animation:pulse 2s infinite}
-@keyframes pulse{50%{opacity:.4}}
 #home h1{font-family:var(--font-mono);font-size:clamp(2.6rem,6vw,4.4rem);line-height:1.02;margin:22px 0 16px;font-weight:400;letter-spacing:-.01em}
 .hero-sub{font-size:18px;color:#cfcfcf;max-width:480px}
 .icon-row{display:flex;gap:8px;margin:24px 0;flex-wrap:wrap}
 .icon-btn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.03);color:var(--muted);transition:color .25s,border-color .25s,transform .25s}
 .icon-btn:hover{color:#fff;border-color:var(--border2);transform:translateY(-2px)}
-.icon-btn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.icon-btn img{width:24px;height:24px;display:block}
 .hero-cta{display:flex;gap:14px;margin:8px 0 8px;flex-wrap:wrap}
 .btn{font-family:var(--font-ui);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:14px 22px;border-radius:10px;border:1px solid var(--border2);display:inline-flex;align-items:center;gap:10px;transition:transform .2s,background .25s,border-color .25s;will-change:transform}
 .btn.primary{background:#ececec;color:#111;border-color:#ececec}
@@ -132,13 +135,21 @@ h2.title{font-family:var(--font-mono);font-size:clamp(1.6rem,3.4vw,2.3rem);font-
 .proj::after{content:'';position:absolute;inset:0;background:radial-gradient(500px circle at var(--spot-x) var(--spot-y),rgba(255,255,255,.1),transparent 55%);opacity:0;transition:opacity .3s;pointer-events:none}
 .proj:hover::after{opacity:1}
 
-/* ---------- gallery strip ---------- */
-.g-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,320px);gap:14px;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x mandatory}
+/* ---------- gallery ---------- */
+.g-subrow{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:26px}
+.g-nav{display:flex;gap:8px;flex-shrink:0}
+.g-nav button{width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);font-size:17px;line-height:1;cursor:pointer;transition:color .25s,border-color .25s,transform .25s;font-family:var(--font)}
+.g-nav button:hover{color:#fff;border-color:#fff;transform:translateY(-2px)}
+.g-strip{display:flex;gap:12px;overflow-x:auto;padding:6px 2px 14px;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:#2c2c2c transparent}
 .g-strip::-webkit-scrollbar{height:6px}
 .g-strip::-webkit-scrollbar-thumb{background:#2c2c2c;border-radius:3px}
-.g-item{scroll-snap-align:start;border:1px solid var(--border);border-radius:12px;overflow:hidden;aspect-ratio:4/3;background:#0a0a0a}
-.g-item img{width:100%;height:100%;object-fit:cover;opacity:.75;transition:opacity .4s,transform .5s}
-.g-item:hover img{opacity:1;transform:scale(1.03)}
+.g-item{flex:0 0 250px;height:300px;scroll-snap-align:start;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#0a0a0a;position:relative;transition:flex-basis .55s cubic-bezier(.2,.7,.2,1),border-color .3s,box-shadow .3s}
+.g-item img,.g-item video{width:100%;height:100%;object-fit:cover;display:block}
+@media(hover:hover){
+  .g-strip:hover .g-item{flex-basis:195px}
+  .g-strip .g-item:hover{flex-basis:370px;border-color:var(--border2);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+}
+@media(max-width:640px){.g-item{flex-basis:220px;height:260px}}
 
 /* ---------- contact ---------- */
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
@@ -150,21 +161,28 @@ h2.title{font-family:var(--font-mono);font-size:clamp(1.6rem,3.4vw,2.3rem);font-
 .discord-link small{font-family:var(--font-ui);font-size:12px;color:var(--muted)}
 footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted);font-family:var(--font-mono);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
-/* ---------- music ---------- */
-.music{position:fixed;bottom:20px;right:22px;width:320px;max-width:calc(100vw - 32px);background:rgba(16,16,16,.88);border:1px solid var(--border);border-radius:12px;padding:12px;z-index:90;backdrop-filter:blur(12px);display:flex;align-items:center;gap:12px}
-.mp-cover{width:46px;height:46px;flex-shrink:0;overflow:hidden;border:1px solid #2c2c2c;border-radius:8px;background:#000}
+/* ---------- music dock ---------- */
+.music{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);width:auto;max-width:calc(100vw - 24px);background:rgba(14,14,14,.86);border:1px solid var(--border);border-radius:999px;padding:8px 18px 8px 8px;z-index:90;backdrop-filter:blur(14px);display:flex;align-items:center;gap:10px}
+.mp-cover{width:36px;height:36px;flex-shrink:0;overflow:hidden;border:1px solid #2c2c2c;border-radius:50%;background:#000}
 .mp-cover img{width:100%;height:100%;object-fit:cover}
-.mp-info{flex:1;min-width:0}
-.track-title{font-family:var(--font-mono);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.track-subtitle{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mp-controls{display:flex;align-items:center;gap:6px}
+.mp-info{min-width:0;max-width:190px}
+.track-title{font-family:var(--font-mono);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eq{display:none;align-items:flex-end;gap:2px;height:14px;flex-shrink:0}
+.music.playing .eq{display:inline-flex}
+.eq i{width:2px;height:14px;background:var(--text);border-radius:1px;transform-origin:bottom;animation:eqb 1s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:.18s}
+.eq i:nth-child(3){animation-delay:.36s}
+@keyframes eqb{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+.mp-controls{display:flex;align-items:center;gap:2px;flex-shrink:0}
 .mp-btn{background:none;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px}
 .mp-btn:hover{color:#fff}
 .mp-btn svg{width:14px;height:14px;fill:currentColor}
 .mp-btn.play-main{width:32px;height:32px;border:1px solid #333;border-radius:50%}
-.vol-slider{-webkit-appearance:none;width:48px;height:2px;background:#333;outline:none}
-.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:8px;height:8px;border-radius:50%;background:#fff}
-@media(max-width:640px){.vol-slider{display:none}.music{left:12px;right:12px;bottom:12px;width:auto}}
+.vol-slider{-webkit-appearance:none;appearance:none;width:0;opacity:0;height:2px;background:#333;outline:none;cursor:pointer;margin:0;padding:0;transition:width .3s,opacity .3s}
+.music:hover .vol-slider,.music:focus-within .vol-slider{width:64px;opacity:1}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:8px;height:8px;border-radius:50%;background:#fff;cursor:pointer}
+.vol-slider::-moz-range-thumb{width:8px;height:8px;border-radius:50%;background:#fff;border:none;cursor:pointer}
+@media(max-width:640px){.mp-info{max-width:130px}}
 
 /* StarBorder for primary CTA */
 .star-wrap{position:relative;display:inline-flex;border-radius:10px;padding:1.5px;overflow:hidden}
@@ -179,12 +197,6 @@ footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted
 .glare{position:absolute;inset:0;background:radial-gradient(420px circle at var(--spot-x) var(--spot-y),rgba(255,255,255,.14),transparent 55%);opacity:0;transition:opacity .3s;pointer-events:none}
 .proj:hover .glare{opacity:1}
 
-/* gallery video */
-.g-item video{width:100%;height:100%;object-fit:cover;opacity:.85}
-.g-item:hover video{opacity:1}
-.g-cap{position:absolute;bottom:8px;left:8px;font-family:var(--font-mono);font-size:10px;background:rgba(0,0,0,.65);border:1px solid var(--border);padding:3px 8px;border-radius:999px;color:#ddd}
-.g-item{position:relative}
-
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{transition-duration:.01ms!important;animation:none!important}
 </style>
@@ -195,8 +207,7 @@ footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted
 <div id="loader"><div class="l-brand">R4lzy</div><div class="l-bar"><i id="lFill"></i></div><div class="l-sub">loading</div></div>
 
 <div id="veil"></div>
-<div class="cursor-dot" id="cDot"></div>
-<div class="cursor-ring" id="cRing"></div>
+<div id="xhair" aria-hidden="true"><i class="h"></i><i class="v"></i></div>
 
 <nav>
   <a href="#home" class="brand" id="logo">R4lzy</a>
@@ -213,16 +224,15 @@ footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted
   <section id="home">
     <div class="hero-stack">
       <div>
-        <span class="eyebrow rv"><span class="dot"></span><span id="decrypt">reverse engineering, tools, web</span></span>
         <h1 class="split" id="heroTitle">i build stuff. i break stuff.</h1>
         <p class="hero-sub rv" data-d="1">i'm <span class="shiny">r4lzy</span>. i just like to exploit and have fun.</p>
         <div class="icon-row rv" data-d="2">
-          <span class="icon-btn" title="reverse engineering"><svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/><circle cx="12" cy="12" r="1.4"/></svg></span>
-          <span class="icon-btn" title="lua"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.5 6.5 0 0 0 20 13.5Z"/></svg></span>
-          <span class="icon-btn" title="c++"><svg viewBox="0 0 24 24"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M13.5 5l-3 14"/></svg></span>
-          <span class="icon-btn" title="c#"><svg viewBox="0 0 24 24"><path d="M9 4 7 20M17 4l-2 16M4.5 9h16M3.5 15h16"/></svg></span>
-          <span class="icon-btn" title="php"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="13" rx="2"/><path d="m7 10 2.5 2.5L7 15M12 15h5"/></svg></span>
-          <span class="icon-btn" title="html / css / js"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.3 3.8 5.2 3.8 8.5s-1.3 6.2-3.8 8.5c-2.5-2.3-3.8-5.2-3.8-8.5S9.5 5.8 12 3.5Z"/></svg></span>
+          <span class="icon-btn" title="lua"><img src="assets/icons/lua.svg" alt="lua" loading="lazy"></span>
+          <span class="icon-btn" title="c++"><img src="assets/icons/cpp.svg" alt="c++" loading="lazy"></span>
+          <span class="icon-btn" title="c#"><img src="assets/icons/csharp.svg" alt="c#" loading="lazy"></span>
+          <span class="icon-btn" title="php"><img src="assets/icons/php.svg" alt="php" loading="lazy"></span>
+          <span class="icon-btn" title="html5"><img src="assets/icons/html5.svg" alt="html5" loading="lazy"></span>
+          <span class="icon-btn" title="javascript"><img src="assets/icons/js.svg" alt="javascript" loading="lazy"></span>
         </div>
         <div class="hero-cta rv" data-d="3">
           <span class="star-wrap magnetic"><a class="btn primary" href="#projects">view my stuff</a></span>
@@ -256,7 +266,6 @@ footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted
   <section id="projects" class="block">
     <p class="label rv">projects</p>
     <h2 class="title rv" data-d="1">stuff i made.</h2>
-    <p class="sub rv" data-d="2">only my own stuff. that ex team era is done lol.</p>
     <div class="proj-grid">
       <a class="proj spot tilt rv" data-d="1" href="https://r4l.online" target="_blank" rel="noopener noreferrer">
         <div class="proj-img dark"><img src="assets/media/r4l-rebranded.png" alt="R4L" loading="lazy"></div>
@@ -271,7 +280,7 @@ footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted
       <a class="proj spot tilt rv" data-d="2" href="https://rscripts.net/@r4lzy" target="_blank" rel="noopener noreferrer">
         <div class="proj-img"><img src="assets/images/projects/project4.jpg" alt="Lua scripts" loading="lazy"></div>
         <div class="proj-body">
-          <h3>lua dumps</h3>
+          <h3>roblox exploit scripts</h3>
           <p>small scripts and notes i throw up publicly from time to time.</p>
           <div class="proj-tags"><span>lua</span><span>public</span></div>
           <div class="proj-cta"><span>view scripts</span><span class="arr">↗</span></div>
@@ -283,14 +292,15 @@ footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted
   <section id="gallery" class="block">
     <p class="label rv">gallery</p>
     <h2 class="title rv" data-d="1">random dumps.</h2>
-    <p class="sub rv" data-d="2">drag sideways. hover a clip to play it.</p>
-    <div class="g-strip rv" data-d="2" id="gStrip">
-      <div class="g-item"><video muted loop playsinline preload="none" poster="assets/media/visuals.png" data-hover><source src="assets/media/movement.mp4" type="video/mp4"></video><span class="g-cap">movement</span></div>
-      <div class="g-item"><video muted loop playsinline preload="none" poster="assets/media/customization1.png" data-hover><source src="assets/media/aimbot.mp4" type="video/mp4"></video><span class="g-cap">tooling</span></div>
-      <div class="g-item"><img src="assets/media/visuals.png" alt="product UI" loading="lazy"><span class="g-cap">ui</span></div>
-      <div class="g-item"><img src="assets/media/customization1.png" alt="customization" loading="lazy"><span class="g-cap">themes</span></div>
-      <div class="g-item"><img src="assets/media/customization2.png" alt="settings" loading="lazy"><span class="g-cap">settings</span></div>
-      <div class="g-item"><img src="assets/media/r4l-favicon.png" alt="brand" loading="lazy"><span class="g-cap">brand</span></div>
+    <div class="g-subrow rv" data-d="2">
+      <p class="sub" style="margin:0">drag sideways. hover a clip to play it.</p>
+      <div class="g-nav"><button id="gPrev" aria-label="previous">←</button><button id="gNext" aria-label="next">→</button></div>
+    </div>
+    <div class="g-strip rv" data-d="3" id="gStrip">
+      <div class="g-item"><video muted loop playsinline preload="none" poster="assets/media/visuals.png" data-hover><source src="assets/media/movement.mp4" type="video/mp4"></video></div>
+      <div class="g-item"><video muted loop playsinline preload="none" poster="assets/media/customization1.png" data-hover><source src="assets/media/aimbot.mp4" type="video/mp4"></video></div>
+      <div class="g-item"><img src="assets/media/visuals.png" alt="product ui" loading="lazy"></div>
+      <div class="g-item"><img src="assets/media/r4l-favicon.png" alt="brand" loading="lazy"></div>
       <div class="g-item"><img src="assets/images/gallery/gallery2.jpg" alt="" loading="lazy"></div>
       <div class="g-item"><img src="assets/images/gallery/gallery3.jpg" alt="" loading="lazy"></div>
       <div class="g-item"><img src="assets/images/gallery/gallery4.jpg" alt="" loading="lazy"></div>
@@ -320,7 +330,8 @@ footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted
 
 <div class="music" id="musicPlayer">
   <div class="mp-cover"><img id="coverImg" src="assets/images/covers/cover1.jpg" alt="cover"></div>
-  <div class="mp-info"><div class="track-title" id="trackTitle">...</div><div class="track-subtitle" id="trackArtist">...</div></div>
+  <div class="mp-info"><div class="track-title" id="trackTitle">...</div></div>
+  <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
   <div class="mp-controls">
     <button class="mp-btn" id="prevBtn" aria-label="prev"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
     <button class="mp-btn play-main" id="playBtn" aria-label="play"><svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg id="pauseIcon" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
@@ -346,9 +357,6 @@ const ht=document.getElementById('heroTitle');
 (()=>{const t=ht.textContent;ht.textContent='';t.split(' ').forEach((word,wi)=>{const w=document.createElement('span');w.className='w';[...word].forEach(c=>{const s=document.createElement('span');s.className='ch';s.textContent=c;w.appendChild(s)});ht.appendChild(w);ht.appendChild(document.createTextNode(' '))});
 requestAnimationFrame(()=>requestAnimationFrame(()=>ht.classList.add('in')));
 [...ht.querySelectorAll('.ch')].forEach((c,i)=>c.style.transitionDelay=(i*22)+'ms');})();
-
-// ---------- decrypt eyebrow (DecryptedText style) ----------
-(()=>{const el=document.getElementById('decrypt');if(!el)return;const orig=el.textContent,chars='!<>-_\\/[]{}=+*^?#';let f=0;const iv=setInterval(()=>{el.textContent=orig.split('').map((c,i)=>i<f?c:(c===' '?' ':chars[Math.floor(Math.random()*chars.length)])).join('');f+=2;if(f>orig.length)clearInterval(iv)},40);})();
 
 // ---------- inview (Motion.dev style) ----------
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12,rootMargin:'0px 0px -40px'});
@@ -385,11 +393,14 @@ document.querySelectorAll('.tilt').forEach(card=>{
 // ---------- gallery hover-play + pause offscreen ----------
 (()=>{const vids=[...document.querySelectorAll('video[data-hover]')];vids.forEach(v=>{const item=v.closest('.g-item');item.addEventListener('mouseenter',()=>v.play().catch(()=>{}));item.addEventListener('mouseleave',()=>v.pause())});const vio=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;if(v.tagName!=='VIDEO')return;if(!e.isIntersecting)v.pause();else if(v.hasAttribute('data-auto'))v.play().catch(()=>{})}));document.querySelectorAll('video').forEach(v=>vio.observe(v))})();
 
+// ---------- gallery arrows ----------
+(()=>{const s=document.getElementById('gStrip');if(!s)return;const step=()=>Math.min(s.clientWidth*.8,400);document.getElementById('gPrev').addEventListener('click',()=>s.scrollBy({left:-step(),behavior:'smooth'}));document.getElementById('gNext').addEventListener('click',()=>s.scrollBy({left:step(),behavior:'smooth'}))})();
+
 // ---------- gallery drag ----------
 (()=>{const s=document.getElementById('gStrip');if(!s)return;let down=false,sx=0,sl=0;s.addEventListener('pointerdown',e=>{down=true;sx=e.clientX;sl=s.scrollLeft});addEventListener('pointerup',()=>down=false);s.addEventListener('pointermove',e=>{if(!down)return;s.scrollLeft=sl-(e.clientX-sx)});})();
 
-// ---------- cursor ----------
-(()=>{const d=document.getElementById('cDot'),r=document.getElementById('cRing');if(!matchMedia('(hover:hover)').matches)return;let mx=0,my=0,rx=0,ry=0;addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;d.style.left=mx+'px';d.style.top=my+'px'});(function an(){rx+=(mx-rx)*.16;ry+=(my-ry)*.16;r.style.left=rx+'px';r.style.top=ry+'px';requestAnimationFrame(an)})();document.querySelectorAll('a,button,.proj,.g-item').forEach(el=>{el.addEventListener('mouseenter',()=>r.classList.add('hover'));el.addEventListener('mouseleave',()=>r.classList.remove('hover'))});})();
+// ---------- crosshair ----------
+(()=>{const x=document.getElementById('xhair');if(!x||!matchMedia('(hover:hover) and (pointer:fine)').matches){if(x)x.remove();return}let tx=innerWidth/2,ty=innerHeight/2,px=tx,py=ty;addEventListener('mousemove',e=>{tx=e.clientX;ty=e.clientY},{passive:true});(function an(){px+=(tx-px)*.45;py+=(ty-py)*.45;x.style.left=px+'px';x.style.top=py+'px';requestAnimationFrame(an)})();document.querySelectorAll('a,button,input,.proj,.g-item,.icon-btn,.discord-link,.g-nav button').forEach(el=>{el.addEventListener('mouseenter',()=>x.classList.add('big'));el.addEventListener('mouseleave',()=>x.classList.remove('big'))});addEventListener('mousedown',()=>x.classList.add('down'));addEventListener('mouseup',()=>x.classList.remove('down'))})();
 
 // ---------- music (kept, compact) ----------
 const tracks=[
@@ -398,10 +409,10 @@ const tracks=[
  {name:"sometimes",artist:"idk the artist gng",src:"assets/music/song3.mp3",cover:"assets/images/covers/cover3.jpg"},
  {name:"as the world caves in",artist:"matt maltese",src:"assets/music/song4.mp3",cover:"assets/images/covers/cover4.jpg"},
  {name:"Bangkit usai pesta",artist:"Harum Manis",src:"assets/music/song5.mp3",cover:"assets/images/covers/cover5.jpg"}];
-const ap=document.getElementById('audioPlayer'),playBtn=document.getElementById('playBtn'),playIcon=document.getElementById('playIcon'),pauseIcon=document.getElementById('pauseIcon'),vol=document.getElementById('volSlider'),tt=document.getElementById('trackTitle'),ta=document.getElementById('trackArtist'),ci=document.getElementById('coverImg');
+const ap=document.getElementById('audioPlayer'),playBtn=document.getElementById('playBtn'),playIcon=document.getElementById('playIcon'),pauseIcon=document.getElementById('pauseIcon'),vol=document.getElementById('volSlider'),tt=document.getElementById('trackTitle'),ci=document.getElementById('coverImg'),mp=document.getElementById('musicPlayer');
 let cur=0,playing=false;ap.volume=.5;
-function loadT(i){cur=i;const t=tracks[cur];ap.src=t.src;tt.textContent=t.name;ta.textContent=t.artist;ci.src=t.cover}
-function ui(){playIcon.style.display=playing?'none':'block';pauseIcon.style.display=playing?'block':'none'}
+function loadT(i){cur=i;const t=tracks[cur];ap.src=t.src;tt.textContent=t.name+' - '+t.artist;ci.src=t.cover}
+function ui(){playIcon.style.display=playing?'none':'block';pauseIcon.style.display=playing?'block':'none';mp.classList.toggle('playing',playing)}
 function play(){if(!ap.src)loadT(cur);ap.play().then(()=>{playing=true;ui()}).catch(()=>{playing=false;ui()})}
 function pause(){ap.pause();playing=false;ui()}
 playBtn.addEventListener('click',()=>playing?pause():play());
