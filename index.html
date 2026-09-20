@@ -29,18 +29,16 @@ img{display:block;max-width:100%}
 
 /* ---------- progress + preloader ---------- */
 #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--text);z-index:200}
-#loader{position:fixed;inset:0;background:#0b0b0b;z-index:1000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;transition:transform .55s cubic-bezier(.7,0,.2,1),visibility .55s}
-#loader.done{transform:translateY(-100%);visibility:hidden}
+#loader{position:fixed;inset:0;background:#0b0b0b;z-index:1000;display:flex;align-items:center;justify-content:center;transition:opacity .35s ease,visibility .35s}
+#loader.done{opacity:0;visibility:hidden}
 /* hard fallback: never trap users on the loader even if all JS fails */
-#loader{animation:forceHide .6s ease 6s forwards}
+#loader{animation:forceHide .6s ease 3s forwards}
 @keyframes forceHide{to{opacity:0;visibility:hidden}}
-.l-mark{width:52px;height:52px;animation:markIn .8s ease both}
-@keyframes markIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
-#loader .l-brand{font-family:var(--font-mono);font-size:1.2rem;letter-spacing:.06em}
-.l-row{display:flex;align-items:center;gap:12px}
-#loader .l-bar{width:170px;height:2px;background:#262626;overflow:hidden;border-radius:2px}
-#loader .l-bar i{display:block;height:100%;width:0;background:var(--text)}
-#lPct{font-family:var(--font-mono);font-size:11px;color:var(--muted);min-width:36px;text-align:right}
+.l-word{display:flex;align-items:baseline;font-size:clamp(1.7rem,5vw,2.6rem);letter-spacing:.06em;color:var(--text)}
+.l-word span{opacity:0;animation:typeIn .01s linear forwards}
+@keyframes typeIn{to{opacity:1}}
+.l-caret{width:.45em;height:.95em;background:var(--text);margin-left:.14em;animation:caretBlink .75s steps(1) infinite}
+@keyframes caretBlink{50%{opacity:0}}
 
 /* ---------- bg ---------- */
 #bgVideo{position:fixed;top:50%;left:50%;min-width:100vw;min-height:100vh;width:auto;height:auto;z-index:-4;transform:translate(-50%,-50%) scale(1.08);filter:blur(7px) brightness(.16) saturate(.75);object-fit:cover;pointer-events:none}
@@ -214,7 +212,7 @@ footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted
 <body>
 
 <div id="progress"></div>
-<div id="loader"><svg class="l-mark" viewBox="0 0 100 100" aria-hidden="true"><path d="M28 12 72 12c14 0 20 8 14 16L54 62l26-4-24 30 8-24-22 4 30-44-24 4 16-16H28z" fill="#e8e8e8"/></svg><div class="l-brand">r4lzy</div><div class="l-row"><div class="l-bar"><i id="lFill"></i></div><span id="lPct">0%</span></div></div>
+<div id="loader"><div class="l-word" id="lWord" aria-label="welcome."></div></div>
 
 <video id="bgVideo" autoplay muted loop playsinline preload="auto">
   <source src="assets/video/background.mp4" type="video/mp4">
@@ -357,7 +355,7 @@ footer{border-top:1px solid var(--border);padding:28px 0 110px;color:var(--muted
 
 <script>
 // ---------- loader (isolated: runs even if the main script below fails) ----------
-(function(){var f=document.getElementById('lFill'),t=document.getElementById('lPct'),l=document.getElementById('loader');if(!l)return;var v=0,over=false;function render(){if(f)f.style.width=v+'%';if(t)t.textContent=Math.floor(v)+'%'}var iv=setInterval(function(){if(v<90){v+=(90-v)*.09+.5;if(v>90)v=90;render()}},70);function done(){if(over)return;over=true;clearInterval(iv);v=100;render();setTimeout(function(){l.classList.add('done')},200)}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){setTimeout(done,400)})}else{setTimeout(done,400)}setTimeout(done,2200);l.addEventListener('click',done);})();
+(function(){var l=document.getElementById('loader'),w=document.getElementById('lWord');if(!l)return;var over=false;if(w){var txt='welcome.';for(var i=0;i<txt.length;i++){var s=document.createElement('span');s.textContent=txt[i];s.style.animationDelay=(i*45)+'ms';w.appendChild(s)}var c=document.createElement('i');c.className='l-caret';w.appendChild(c)}function done(){if(over)return;over=true;l.classList.add('done');setTimeout(function(){l.remove()},500)}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){setTimeout(done,700)})}else{setTimeout(done,700)}setTimeout(done,1600);l.addEventListener('click',done);})();
 </script>
 
 <script>
